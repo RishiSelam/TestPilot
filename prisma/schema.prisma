@@ -1,0 +1,21 @@
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model TestCase {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @default("")
+  steps       String
+  expected    String
+  priority    String   @default("Medium")
+  status      String   @default("Draft")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
