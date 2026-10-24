@@ -11,57 +11,118 @@ import {
   X,
 } from "lucide-react";
 
+type Priority = "Low" | "Medium" | "High" | "Critical";
+type Status = "Draft" | "Ready" | "Blocked";
+
 type TestCase = {
   id: string;
   title: string;
   description: string;
   steps: string;
   expected: string;
-  priority: "Low" | "Medium" | "High" | "Critical";
-  status: "Draft" | "Ready" | "Blocked";
+  priority: Priority;
+  status: Status;
   createdAt: string;
 };
 
-const STORAGE_KEY = "testpilot-test-cases";
+type TestCaseForm = Omit<TestCase, "id" | "createdAt">;
 
-const emptyForm = {
+const emptyForm: TestCaseForm = {
   title: "",
   description: "",
   steps: "",
   expected: "",
-  priority: "Medium" as TestCase["priority"],
-  status: "Draft" as TestCase["status"],
+  priority: "Medium",
+  status: "Draft",
 };
+
+function normalizeCase(data: Record<string, unknown>): TestCase {
+  const priority = String(data.priority ?? "MEDIUM").toUpperCase();
+  const status = String(data.status ?? "DRAFT").toUpperCase();
+
+  const normalizedPriority: Priority =
+    priority === "LOW" ? "Low"
+    : priority === "HIGH" ? "High"
+    : priority === "CRITICAL" ? "Critical"
+    : "Medium";
+
+  const normalizedStatus: Status =
+    status === "READY" || status === "ACTIVE" ? "Ready"
+    : status === "BLOCKED" || status === "ARCHIVED" ? "Blocked"
+    : "Draft";
+
+  return {
+    id: String(data.id ?? ""),
+    title: String(data.title ?? ""),
+    description: String(data.description ?? ""),
+    steps: String(data.steps ?? ""),
+    expected: String(data.expected ?? ""),
+    priority: normalizedPriority,
+    status: normalizedStatus,
+    createdAt: String(data.createdAt ?? new Date().toISOString()),
+  };
+}
+
+async function apiRequest<T>(
+  url: string,
+  options?: RequestInit
+): Promise<T> {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options?.headers,
+    },
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.error === "string"
+        ? data.error
+        : `Request failed (${response.status}).`
+    );
+  }
+
+  return data as T;
+}
 
 export default function TestCasesView() {
   const [cases, setCases] = useState<TestCase[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [loadingError, setLoadingError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState<TestCaseForm>(emptyForm);
 
-  useEffect(() => {
+  async function loadCases() {
+    setLoaded(false);
+    setLoadingError("");
+
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed: unknown = JSON.parse(saved);
-        if (Array.isArray(parsed)) setCases(parsed as TestCase[]);
-      }
-    } catch {
-      console.error("Could not load saved test cases.");
+      const data = await apiRequest<Record<string, unknown>[]>(
+        "/api/test-cases"
+      );
+      setCases(data.map(normalizeCase));
+    } catch (error) {
+      setLoadingError(
+        error instanceof Error ? error.message : "Could not load test cases."
+      );
     } finally {
       setLoaded(true);
     }
-  }, []);
+  }
 
   useEffect(() => {
-    if (loaded) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
-    }
-  }, [cases, loaded]);
+    void loadCases();
+  }, []);
 
   const filteredCases = useMemo(() => {
     return cases.filter((item) => {
@@ -86,6 +147,7 @@ export default function TestCasesView() {
   function openCreateForm() {
     setEditingId(null);
     setForm(emptyForm);
+    setActionError("");
     setShowForm(true);
   }
 
@@ -99,39 +161,90 @@ export default function TestCasesView() {
       priority: item.priority,
       status: item.status,
     });
+    setActionError("");
     setShowForm(true);
   }
 
-  function saveCase(event: React.FormEvent<HTMLFormElement>) {
+  async function saveCase(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const title = form.title.trim();
-    if (!title) return;
+    if (!title || saving) return;
 
-    if (editingId) {
-      setCases((current) =>
-        current.map((item) =>
-          item.id === editingId ? { ...item, ...form, title } : item
-        )
+    setSaving(true);
+    setActionError("");
+
+    const payload = {
+      ...form,
+      title,
+      priority: form.priority.toUpperCase(),
+      status: form.status.toUpperCase(),
+    };
+
+    try {
+      if (editingId) {
+        const updated = await apiRequest<Record<string, unknown>>(
+          `/api/test-cases/${encodeURIComponent(editingId)}`,
+          {
+            method: "PATCH",
+            body: JSON.stringify(payload),
+          }
+        );
+
+        const normalized = normalizeCase(updated);
+        setCases((current) =>
+          current.map((item) =>
+            item.id === editingId ? normalized : item
+          )
+        );
+      } else {
+        const created = await apiRequest<Record<string, unknown>>(
+          "/api/test-cases",
+          {
+            method: "POST",
+            body: JSON.stringify(payload),
+          }
+        );
+
+        setCases((current) => [normalizeCase(created), ...current]);
+      }
+
+      setShowForm(false);
+      setEditingId(null);
+      setForm(emptyForm);
+    } catch (error) {
+      setActionError(
+        error instanceof Error ? error.message : "Could not save the test case."
       );
-    } else {
-      const newCase: TestCase = {
-        ...form,
-        title,
-        id: `TC-${Date.now().toString().slice(-7)}`,
-        createdAt: new Date().toISOString(),
-      };
-      setCases((current) => [newCase, ...current]);
+    } finally {
+      setSaving(false);
     }
-
-    setShowForm(false);
-    setEditingId(null);
-    setForm(emptyForm);
   }
 
-  function deleteCase(id: string) {
-    if (window.confirm("Delete this test case? This cannot be undone.")) {
+  async function deleteCase(id: string) {
+    if (
+      !window.confirm("Delete this test case? This cannot be undone.") ||
+      deletingId
+    ) {
+      return;
+    }
+
+    setDeletingId(id);
+    setActionError("");
+
+    try {
+      await apiRequest<{ message: string }>(
+        `/api/test-cases/${encodeURIComponent(id)}`,
+        { method: "DELETE" }
+      );
+
       setCases((current) => current.filter((item) => item.id !== id));
+    } catch (error) {
+      setActionError(
+        error instanceof Error ? error.message : "Could not delete the test case."
+      );
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -150,6 +263,7 @@ export default function TestCasesView() {
             Create and organize the checks that keep your product reliable.
           </p>
         </div>
+
         <button
           onClick={openCreateForm}
           className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
@@ -158,6 +272,22 @@ export default function TestCasesView() {
           New test case
         </button>
       </div>
+
+      {actionError && (
+        <div
+          role="alert"
+          className="flex items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+        >
+          <span>{actionError}</span>
+          <button
+            aria-label="Dismiss error"
+            onClick={() => setActionError("")}
+            className="shrink-0 rounded p-1 hover:bg-destructive/10"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-3">
         <SummaryCard label="Total cases" value={cases.length} />
@@ -216,13 +346,27 @@ export default function TestCasesView() {
           <p className="p-10 text-center text-sm text-muted-foreground">
             Loading test cases...
           </p>
+        ) : loadingError ? (
+          <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
+            <p role="alert" className="text-sm text-destructive">
+              {loadingError}
+            </p>
+            <button
+              onClick={() => void loadCases()}
+              className="rounded-xl border px-4 py-2 text-sm font-medium hover:bg-muted"
+            >
+              Try again
+            </button>
+          </div>
         ) : filteredCases.length === 0 ? (
           <div className="flex flex-col items-center px-6 py-16 text-center">
             <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-muted">
               <ClipboardList className="size-6 text-muted-foreground" />
             </div>
             <h3 className="font-medium">
-              {cases.length === 0 ? "Your test library starts here" : "No matching cases"}
+              {cases.length === 0
+                ? "Your test library starts here"
+                : "No matching cases"}
             </h3>
             <p className="mt-2 max-w-sm text-sm text-muted-foreground">
               {cases.length === 0
@@ -280,8 +424,9 @@ export default function TestCasesView() {
                   </button>
                   <button
                     aria-label={`Delete ${item.title}`}
-                    onClick={() => deleteCase(item.id)}
-                    className="inline-flex size-9 items-center justify-center rounded-lg border text-destructive hover:bg-destructive/10"
+                    disabled={deletingId === item.id}
+                    onClick={() => void deleteCase(item.id)}
+                    className="inline-flex size-9 items-center justify-center rounded-lg border text-destructive hover:bg-destructive/10 disabled:opacity-50"
                   >
                     <Trash2 className="size-4" />
                   </button>
@@ -292,7 +437,7 @@ export default function TestCasesView() {
         )}
 
         <div className="border-t px-4 py-3 text-xs text-muted-foreground">
-          Showing {filteredCases.length} of {cases.length} test cases · Saved in this browser
+          Showing {filteredCases.length} of {cases.length} test cases · Saved to database
         </div>
       </div>
 
@@ -300,7 +445,9 @@ export default function TestCasesView() {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setShowForm(false);
+            if (event.target === event.currentTarget && !saving) {
+              setShowForm(false);
+            }
           }}
         >
           <div
@@ -320,6 +467,7 @@ export default function TestCasesView() {
               </div>
               <button
                 aria-label="Close form"
+                disabled={saving}
                 onClick={() => setShowForm(false)}
                 className="rounded-lg p-2 hover:bg-muted"
               >
@@ -404,7 +552,7 @@ export default function TestCasesView() {
                     onChange={(event) =>
                       setForm({
                         ...form,
-                        priority: event.target.value as TestCase["priority"],
+                        priority: event.target.value as Priority,
                       })
                     }
                     className={inputClass}
@@ -424,7 +572,7 @@ export default function TestCasesView() {
                     onChange={(event) =>
                       setForm({
                         ...form,
-                        status: event.target.value as TestCase["status"],
+                        status: event.target.value as Status,
                       })
                     }
                     className={inputClass}
@@ -436,19 +584,31 @@ export default function TestCasesView() {
                 </div>
               </div>
 
+              {actionError && (
+                <p role="alert" className="text-sm text-destructive">
+                  {actionError}
+                </p>
+              )}
+
               <div className="flex justify-end gap-3 border-t pt-4">
                 <button
                   type="button"
+                  disabled={saving}
                   onClick={() => setShowForm(false)}
-                  className="rounded-xl border px-4 py-2.5 text-sm font-medium hover:bg-muted"
+                  className="rounded-xl border px-4 py-2.5 text-sm font-medium hover:bg-muted disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90"
+                  disabled={saving}
+                  className="rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {editingId ? "Save changes" : "Create test case"}
+                  {saving
+                    ? "Saving..."
+                    : editingId
+                    ? "Save changes"
+                    : "Create test case"}
                 </button>
               </div>
             </form>
@@ -481,7 +641,9 @@ function Pill({ value }: { value: string }) {
 
   return (
     <span
-      className={`rounded-md px-2 py-1 text-[11px] font-medium ${styles[value] ?? "bg-muted text-muted-foreground"}`}
+      className={`rounded-md px-2 py-1 text-[11px] font-medium ${
+        styles[value] ?? "bg-muted text-muted-foreground"
+      }`}
     >
       {value}
     </span>

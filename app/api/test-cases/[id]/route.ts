@@ -7,7 +7,7 @@ type RouteContext = {
 };
 
 const validPriorities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
-const validStatuses = ["DRAFT", "ACTIVE", "ARCHIVED"];
+const validStatuses = ["DRAFT", "READY", "BLOCKED"];
 
 // PATCH /api/test-cases/:id
 export async function PATCH(request: Request, context: RouteContext) {

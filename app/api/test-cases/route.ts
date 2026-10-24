@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     }
 
     const validPriorities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
-    const validStatuses = ["DRAFT", "ACTIVE", "ARCHIVED"];
+    const validStatuses = ["DRAFT", "READY", "BLOCKED"];
 
     if (
       priority !== undefined &&
