@@ -9,18 +9,39 @@ test.describe("TestPilot dashboard", () => {
     await expect(
       page.getByRole("heading", { name: "Good evening." })
     ).toBeVisible();
-    await expect(page.getByText("Demo data")).toBeVisible();
   });
 
   test("displays recent test runs", async ({ page }) => {
+    const testRunName = "Playwright dashboard regression";
+
+    await page.route("**/api/test-runs", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([
+          {
+            id: "playwright-run-1",
+            name: testRunName,
+            environment: "STAGING",
+            passed: 5,
+            failed: 1,
+            skipped: 0,
+            total: 6,
+            status: "FAILED",
+            startedAt: "2026-10-24T09:00:00.000Z",
+            completedAt: "2026-10-24T09:00:00.000Z",
+            createdAt: "2026-10-24T09:00:00.000Z",
+            updatedAt: "2026-10-24T09:00:00.000Z",
+          },
+        ]),
+      });
+    });
+
     await page.goto("/");
 
+    await expect(page.getByText(testRunName)).toBeVisible();
     await expect(
-      page.getByText("Authentication regression")
-    ).toBeVisible();
-
-    await expect(
-      page.getByText("Checkout & payments")
+      page.getByText("5/6", { exact: true })
     ).toBeVisible();
   });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TestCasesView from "@/components/test-cases-view";
 import { useTheme } from "next-themes";
 import {
@@ -46,48 +46,17 @@ const navigation = [
   { label: "Defects", icon: Bug },
 ];
 
-const testRuns = [
-  {
-    name: "Authentication regression",
-    id: "RUN-0248",
-    environment: "Staging",
-    passed: 42,
-    failed: 2,
-    total: 44,
-    status: "Failed",
-    time: "8 min ago",
-  },
-  {
-    name: "Checkout & payments",
-    id: "RUN-0247",
-    environment: "Production",
-    passed: 36,
-    failed: 0,
-    total: 36,
-    status: "Passed",
-    time: "24 min ago",
-  },
-  {
-    name: "User profile API",
-    id: "RUN-0246",
-    environment: "Staging",
-    passed: 28,
-    failed: 1,
-    total: 29,
-    status: "Failed",
-    time: "1 hr ago",
-  },
-  {
-    name: "Dashboard smoke tests",
-    id: "RUN-0245",
-    environment: "Development",
-    passed: 51,
-    failed: 0,
-    total: 51,
-    status: "Passed",
-    time: "2 hrs ago",
-  },
-];
+type TestRun = {
+  id: string;
+  name: string;
+  environment: string;
+  passed: number;
+  failed: number;
+  skipped: number;
+  total: number;
+  status: string;
+  startedAt: string;
+};
 
 const issues = [
   {
@@ -116,6 +85,52 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRunMessage, setShowRunMessage] = useState(false);
+
+  // Load test runs from the database-backed API.
+  const [testRuns, setTestRuns] = useState<TestRun[]>([]);
+  const [runsLoading, setRunsLoading] = useState(true);
+  const [runsError, setRunsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadTestRuns() {
+      try {
+        setRunsLoading(true);
+        setRunsError(null);
+
+        const response = await fetch("/api/test-runs");
+
+        if (!response.ok) {
+          throw new Error("Unable to load test runs.");
+        }
+
+        const data: TestRun[] = await response.json();
+
+        if (!cancelled) {
+          setTestRuns(data);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setRunsError(
+            error instanceof Error
+              ? error.message
+              : "Unable to load test runs."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setRunsLoading(false);
+        }
+      }
+    }
+
+    loadTestRuns();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filteredRuns = testRuns.filter((run) =>
     `${run.name} ${run.id} ${run.environment}`
@@ -182,10 +197,15 @@ export default function Home() {
                   <button
                     key={item.label}
                     onClick={() => {
-                      setActivePage(item.label);
-                      setQuery("");
-                      setShowRunMessage(false);
-                    }}
+                    if (item.label === "Test Runs") {
+                      window.location.href = "/test-runs";
+                      return;
+                    }
+
+                    setActivePage(item.label);
+                    setQuery("");
+                    setShowRunMessage(false);
+                  }}
                     className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
                       active
                         ? "bg-primary text-primary-foreground shadow-sm"
@@ -615,7 +635,9 @@ export default function Home() {
                         variant="ghost"
                         size="sm"
                         className="gap-1 rounded-lg text-muted-foreground"
-                        onClick={() => setActivePage("Test Runs")}
+                        onClick={() => {
+                          window.location.href = "/test-runs";
+                        }}
                       >
                         View all <ArrowRight className="size-3.5" />
                       </Button>
@@ -634,52 +656,84 @@ export default function Home() {
                             </tr>
                           </thead>
                           <tbody>
-                            {filteredRuns.map((run) => (
-                              <tr
-                                key={run.id}
-                                className="border-b last:border-0 transition-colors hover:bg-muted/20"
-                              >
-                                <td className="px-6 py-4">
-                                  <p className="font-medium">{run.name}</p>
-                                  <p className="mt-1 text-xs text-muted-foreground">
-                                    {run.id} · {run.environment}
-                                  </p>
-                                </td>
-                                <td className="px-4 py-4">
-                                  <p className="font-medium">
-                                    {run.passed}/{run.total}
-                                  </p>
-                                  <p className="mt-1 text-xs text-muted-foreground">
-                                    {run.failed} failed
-                                  </p>
-                                </td>
-                                <td className="px-4 py-4">
-                                  <Badge
-                                    variant="outline"
-                                    className={`rounded-lg font-medium ${
-                                      run.status === "Passed"
-                                        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                        : "border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400"
-                                    }`}
-                                  >
-                                    {run.status}
-                                  </Badge>
-                                </td>
-                                <td className="px-6 py-4 text-right text-xs text-muted-foreground">
-                                  {run.time}
-                                </td>
-                              </tr>
-                            ))}
-                            {filteredRuns.length === 0 && (
+                            {runsLoading && (
                               <tr>
                                 <td
                                   colSpan={4}
                                   className="px-6 py-10 text-center text-sm text-muted-foreground"
                                 >
-                                  No test runs match your search.
+                                  Loading test runs...
                                 </td>
                               </tr>
                             )}
+
+                            {!runsLoading && runsError && (
+                              <tr>
+                                <td
+                                  colSpan={4}
+                                  className="px-6 py-10 text-center text-sm text-rose-500"
+                                >
+                                  {runsError}
+                                </td>
+                              </tr>
+                            )}
+
+                            {!runsLoading &&
+                              !runsError &&
+                              filteredRuns.map((run) => (
+                                <tr
+                                  key={run.id}
+                                  className="border-b last:border-0 transition-colors hover:bg-muted/20"
+                                >
+                                  <td className="px-6 py-4">
+                                    <p className="font-medium">{run.name}</p>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                      {run.id.slice(0, 8)} ·{" "}
+                                      {run.environment.charAt(0) +
+                                        run.environment.slice(1).toLowerCase()}
+                                    </p>
+                                  </td>
+                                  <td className="px-4 py-4">
+                                    <p className="font-medium">
+                                      {run.passed}/{run.total}
+                                    </p>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                      {run.failed} failed
+                                    </p>
+                                  </td>
+                                  <td className="px-4 py-4">
+                                    <Badge
+                                      variant="outline"
+                                      className={`rounded-lg font-medium ${
+                                        run.status.toUpperCase() === "PASSED"
+                                          ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                          : "border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                                      }`}
+                                    >
+                                      {run.status.charAt(0) +
+                                        run.status.slice(1).toLowerCase()}
+                                    </Badge>
+                                  </td>
+                                  <td className="px-6 py-4 text-right text-xs text-muted-foreground">
+                                    {new Date(run.startedAt).toLocaleString()}
+                                  </td>
+                                </tr>
+                              ))}
+
+                            {!runsLoading &&
+                              !runsError &&
+                              filteredRuns.length === 0 && (
+                                <tr>
+                                  <td
+                                    colSpan={4}
+                                    className="px-6 py-10 text-center text-sm text-muted-foreground"
+                                  >
+                                    {query
+                                      ? "No test runs match your search."
+                                      : "No test runs yet. Create one through the API to see it here."}
+                                  </td>
+                                </tr>
+                              )}
                           </tbody>
                         </table>
                       </div>

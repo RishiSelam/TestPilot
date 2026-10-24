@@ -19,3 +19,18 @@ model TestCase {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model TestRun {
+  id          String   @id @default(cuid())
+  name        String
+  environment String   @default("Development")
+  passed      Int      @default(0)
+  failed      Int      @default(0)
+  skipped     Int      @default(0)
+  total       Int      @default(0)
+  status      String   @default("Running")
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
