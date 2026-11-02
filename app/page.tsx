@@ -196,15 +196,21 @@ export default function Home() {
                 return (
                   <button
                     key={item.label}
-                    onClick={() => {
-                    if (item.label === "Test Runs") {
-                      window.location.href = "/test-runs";
-                      return;
-                    }
+                    
+                  onClick={() => {
+                  if (item.label === "Test Runs") {
+                    window.location.href = "/test-runs";
+                    return;
+                  }
 
-                    setActivePage(item.label);
-                    setQuery("");
-                    setShowRunMessage(false);
+                  if (item.label === "Defects") {
+                    window.location.href = "/defects";
+                    return;
+                  }
+
+                  setActivePage(item.label);
+                  setQuery("");
+                  setShowRunMessage(false);
                   }}
                     className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
                       active
