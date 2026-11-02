@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -81,10 +82,18 @@ const issues = [
 
 export default function Home() {
   const { theme, setTheme } = useTheme();
+
   const [activePage, setActivePage] = useState("Overview");
   const [query, setQuery] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRunMessage, setShowRunMessage] = useState(false);
+
+  // Prevent theme-related hydration mismatches.
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Load test runs from the database-backed API.
   const [testRuns, setTestRuns] = useState<TestRun[]>([]);
@@ -188,6 +197,7 @@ export default function Home() {
             <p className="mb-3 px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               Quality assurance
             </p>
+
             <div className="space-y-1">
               {navigation.map((item) => {
                 const Icon = item.icon;
@@ -196,22 +206,21 @@ export default function Home() {
                 return (
                   <button
                     key={item.label}
-                    
-                  onClick={() => {
-                  if (item.label === "Test Runs") {
-                    window.location.href = "/test-runs";
-                    return;
-                  }
+                    onClick={() => {
+                      if (item.label === "Test Runs") {
+                        window.location.href = "/test-runs";
+                        return;
+                      }
 
-                  if (item.label === "Defects") {
-                    window.location.href = "/defects";
-                    return;
-                  }
+                      if (item.label === "Defects") {
+                        window.location.href = "/defects";
+                        return;
+                      }
 
-                  setActivePage(item.label);
-                  setQuery("");
-                  setShowRunMessage(false);
-                  }}
+                      setActivePage(item.label);
+                      setQuery("");
+                      setShowRunMessage(false);
+                    }}
                     className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
                       active
                         ? "bg-primary text-primary-foreground shadow-sm"
@@ -220,6 +229,7 @@ export default function Home() {
                   >
                     <Icon className="size-[17px]" />
                     <span className="flex-1 text-left">{item.label}</span>
+
                     {item.label === "Defects" && (
                       <span
                         className={`rounded-md px-1.5 py-0.5 text-[10px] ${
@@ -241,6 +251,7 @@ export default function Home() {
             <p className="mb-3 px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               Preferences
             </p>
+
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -248,16 +259,27 @@ export default function Home() {
               <Settings2 className="size-[17px]" />
               Notifications
             </button>
+
+            {/* Sidebar theme toggle: hydration-safe */}
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
             >
-              {theme === "dark" ? (
+              {!mounted ? (
+                <span className="size-[17px]" />
+              ) : theme === "dark" ? (
                 <Sun className="size-[17px]" />
               ) : (
                 <Moon className="size-[17px]" />
               )}
-              {theme === "dark" ? "Light appearance" : "Dark appearance"}
+
+              <span>
+                {!mounted
+                  ? "Appearance"
+                  : theme === "dark"
+                    ? "Light appearance"
+                    : "Dark appearance"}
+              </span>
             </button>
           </nav>
 
@@ -318,6 +340,7 @@ export default function Home() {
                 <span className="absolute right-2 top-2 size-1.5 rounded-full bg-blue-500" />
               </Button>
 
+              {/* Header theme toggle: hydration-safe */}
               <Button
                 variant="outline"
                 size="icon"
@@ -325,7 +348,9 @@ export default function Home() {
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                 aria-label="Toggle appearance"
               >
-                {theme === "dark" ? (
+                {!mounted ? (
+                  <span className="size-4" />
+                ) : theme === "dark" ? (
                   <Sun className="size-4" />
                 ) : (
                   <Moon className="size-4" />
@@ -653,9 +678,15 @@ export default function Home() {
                         <table className="w-full min-w-[570px] text-left text-sm">
                           <thead>
                             <tr className="border-y bg-muted/30 text-[11px] uppercase tracking-wider text-muted-foreground">
-                              <th className="px-6 py-3 font-medium">Test suite</th>
-                              <th className="px-4 py-3 font-medium">Results</th>
-                              <th className="px-4 py-3 font-medium">Status</th>
+                              <th className="px-6 py-3 font-medium">
+                                Test suite
+                              </th>
+                              <th className="px-4 py-3 font-medium">
+                                Results
+                              </th>
+                              <th className="px-4 py-3 font-medium">
+                                Status
+                              </th>
                               <th className="px-6 py-3 text-right font-medium">
                                 Time
                               </th>
@@ -799,7 +830,8 @@ export default function Home() {
                         className="mt-3 w-full rounded-xl"
                         onClick={() => setActivePage("Defects")}
                       >
-                        View defect tracker <ArrowRight className="ml-2 size-4" />
+                        View defect tracker{" "}
+                        <ArrowRight className="ml-2 size-4" />
                       </Button>
                     </CardContent>
                   </Card>
