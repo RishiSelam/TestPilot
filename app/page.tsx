@@ -207,6 +207,11 @@ export default function Home() {
                   <button
                     key={item.label}
                     onClick={() => {
+                      if (item.label === "API Testing") {
+                        window.location.href = "/api-testing";
+                        return;
+                      }
+
                       if (item.label === "Test Runs") {
                         window.location.href = "/test-runs";
                         return;
