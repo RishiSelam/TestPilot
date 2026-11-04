@@ -59,3 +59,13 @@ model Defect {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
+model ApiRequest {
+  id        String   @id @default(cuid())
+  name      String
+  method    String   @default("GET")
+  url       String
+  headers   String   @default("{}")
+  body      String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
