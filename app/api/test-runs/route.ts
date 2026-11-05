@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -10,6 +9,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     value !== null &&
     !Array.isArray(value)
   );
+}
+
+function getRunStatus(
+  passed: number,
+  failed: number,
+  skipped: number
+): string {
+  if (failed > 0) return "FAILED";
+  if (skipped > 0 && passed > 0) return "PARTIAL";
+  if (skipped > 0) return "SKIPPED";
+  return "PASSED";
 }
 
 // GET /api/test-runs
@@ -108,7 +118,11 @@ export async function POST(request: Request) {
         failed: failedCount,
         skipped: skippedCount,
         total,
-        status: failedCount > 0 ? "FAILED" : "PASSED",
+        status: getRunStatus(
+          passedCount,
+          failedCount,
+          skippedCount
+        ),
         completedAt: new Date(),
       },
     });

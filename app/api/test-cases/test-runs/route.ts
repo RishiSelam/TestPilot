@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -12,6 +11,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   );
 }
 
+function getRunStatus(
+  passed: number,
+  failed: number,
+  skipped: number
+): string {
+  if (failed > 0) return "FAILED";
+  if (skipped > 0 && passed > 0) return "PARTIAL";
+  if (skipped > 0) return "SKIPPED";
+  return "PASSED";
+}
+
 // GET /api/test-runs
 export async function GET() {
   try {
@@ -23,6 +33,7 @@ export async function GET() {
     return NextResponse.json(testRuns, { status: 200 });
   } catch (error) {
     console.error("Failed to fetch test runs:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch test runs." },
       { status: 500 }
@@ -56,7 +67,10 @@ export async function POST(request: Request) {
       !validEnvironments.includes(environment.toUpperCase())
     ) {
       return NextResponse.json(
-        { error: "Environment must be Development, Staging, or Production." },
+        {
+          error:
+            "Environment must be Development, Staging, or Production.",
+        },
         { status: 400 }
       );
     }
@@ -72,12 +86,14 @@ export async function POST(request: Request) {
       )
     ) {
       return NextResponse.json(
-        { error: "Passed, failed, and skipped must be non-negative integers." },
+        {
+          error:
+            "Passed, failed, and skipped must be non-negative integers.",
+        },
         { status: 400 }
       );
     }
 
-    // Explicit narrowing after validation.
     const passedCount = passed as number;
     const failedCount = failed as number;
     const skippedCount = skipped as number;
@@ -98,7 +114,11 @@ export async function POST(request: Request) {
         failed: failedCount,
         skipped: skippedCount,
         total,
-        status: failedCount > 0 ? "FAILED" : "PASSED",
+        status: getRunStatus(
+          passedCount,
+          failedCount,
+          skippedCount
+        ),
         completedAt: new Date(),
       },
     });
@@ -113,6 +133,7 @@ export async function POST(request: Request) {
     }
 
     console.error("Failed to create test run:", error);
+
     return NextResponse.json(
       { error: "Failed to create test run." },
       { status: 500 }

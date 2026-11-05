@@ -1,4 +1,3 @@
-
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
@@ -35,20 +34,42 @@ function formatDate(date: string) {
 }
 
 function statusLabel(status: string) {
-  return status.toUpperCase() === "PASSED" ? "Passed" : status.toUpperCase() === "FAILED" ? "Failed" : "Running";
+  switch (status.toUpperCase()) {
+    case "PASSED":
+      return "Passed";
+    case "FAILED":
+      return "Failed";
+    case "PARTIAL":
+      return "Partial";
+    case "SKIPPED":
+      return "Skipped";
+    case "RUNNING":
+      return "Running";
+    default:
+      return "Unknown";
+  }
 }
 
 function StatusBadge({ status }: { status: string }) {
   const normalized = status.toUpperCase();
+
   const styles =
     normalized === "PASSED"
       ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-600"
       : normalized === "FAILED"
         ? "border-red-500/25 bg-red-500/10 text-red-600"
-        : "border-amber-500/25 bg-amber-500/10 text-amber-600";
+        : normalized === "PARTIAL"
+          ? "border-amber-500/25 bg-amber-500/10 text-amber-600"
+          : normalized === "SKIPPED"
+            ? "border-slate-500/25 bg-slate-500/10 text-slate-500"
+            : normalized === "RUNNING"
+              ? "border-blue-500/25 bg-blue-500/10 text-blue-600"
+              : "border-border bg-muted text-muted-foreground";
 
   return (
-    <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${styles}`}>
+    <span
+      className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${styles}`}
+    >
       {statusLabel(status)}
     </span>
   );
@@ -130,7 +151,9 @@ export default function TestRunsPage() {
       ) ||
       passedCount + failedCount + skippedCount < 1
     ) {
-      setError("Enter valid non-negative whole numbers, with at least one test.");
+      setError(
+        "Enter valid non-negative whole numbers, with at least one test."
+      );
       setSaving(false);
       return;
     }
@@ -160,6 +183,7 @@ export default function TestRunsPage() {
       setSkipped("0");
       setShowForm(false);
       setSuccess("Test run created and saved successfully.");
+
       await loadRuns();
     } catch (err) {
       setError(
@@ -187,6 +211,7 @@ export default function TestRunsPage() {
               <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <FlaskConical className="size-6" />
               </div>
+
               <div>
                 <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
                   Test Runs
@@ -204,9 +229,12 @@ export default function TestRunsPage() {
               disabled={loading}
               className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border px-3 text-sm font-medium transition hover:bg-muted disabled:opacity-50"
             >
-              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`size-4 ${loading ? "animate-spin" : ""}`}
+              />
               Refresh
             </button>
+
             <button
               onClick={() => {
                 setShowForm(!showForm);
@@ -222,13 +250,19 @@ export default function TestRunsPage() {
         </header>
 
         {error && (
-          <div role="alert" className="rounded-xl border border-red-500/25 bg-red-500/5 px-4 py-3 text-sm text-red-600">
+          <div
+            role="alert"
+            className="rounded-xl border border-red-500/25 bg-red-500/5 px-4 py-3 text-sm text-red-600"
+          >
             {error}
           </div>
         )}
 
         {success && (
-          <div role="status" className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-600">
+          <div
+            role="status"
+            className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-600"
+          >
             {success}
           </div>
         )}
@@ -282,6 +316,7 @@ export default function TestRunsPage() {
                       className={inputClass}
                     />
                   </label>
+
                   <label className="space-y-2 text-sm font-medium">
                     Failed
                     <input
@@ -294,6 +329,7 @@ export default function TestRunsPage() {
                       className={inputClass}
                     />
                   </label>
+
                   <label className="space-y-2 text-sm font-medium">
                     Skipped
                     <input
@@ -317,6 +353,7 @@ export default function TestRunsPage() {
                 >
                   Cancel
                 </button>
+
                 <button
                   type="submit"
                   disabled={saving}
@@ -332,24 +369,38 @@ export default function TestRunsPage() {
         <section className="grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-border bg-card p-5">
             <p className="text-sm text-muted-foreground">Total executions</p>
-            <p className="mt-3 text-3xl font-semibold tabular-nums">{runs.length}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Recorded test runs</p>
+            <p className="mt-3 text-3xl font-semibold tabular-nums">
+              {runs.length}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Recorded test runs
+            </p>
           </div>
+
           <div className="rounded-2xl border border-border bg-card p-5">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <CheckCircle2 className="size-4 text-emerald-500" />
               Tests passed
             </div>
-            <p className="mt-3 text-3xl font-semibold tabular-nums">{totalPassed}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Across recorded runs</p>
+            <p className="mt-3 text-3xl font-semibold tabular-nums">
+              {totalPassed}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Across recorded runs
+            </p>
           </div>
+
           <div className="rounded-2xl border border-border bg-card p-5">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <XCircle className="size-4 text-red-500" />
               Tests failed
             </div>
-            <p className="mt-3 text-3xl font-semibold tabular-nums">{totalFailed}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Across recorded runs</p>
+            <p className="mt-3 text-3xl font-semibold tabular-nums">
+              {totalFailed}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Across recorded runs
+            </p>
           </div>
         </section>
 
@@ -358,7 +409,8 @@ export default function TestRunsPage() {
             <div>
               <h2 className="font-semibold">Execution history</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                {filteredRuns.length} {filteredRuns.length === 1 ? "run" : "runs"} shown
+                {filteredRuns.length}{" "}
+                {filteredRuns.length === 1 ? "run" : "runs"} shown
               </p>
             </div>
 
@@ -373,6 +425,7 @@ export default function TestRunsPage() {
                   className={`${inputClass} pl-9 sm:w-64`}
                 />
               </div>
+
               <select
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value)}
@@ -382,6 +435,8 @@ export default function TestRunsPage() {
                 <option value="ALL">All statuses</option>
                 <option value="PASSED">Passed</option>
                 <option value="FAILED">Failed</option>
+                <option value="PARTIAL">Partial</option>
+                <option value="SKIPPED">Skipped</option>
                 <option value="RUNNING">Running</option>
               </select>
             </div>
@@ -396,14 +451,19 @@ export default function TestRunsPage() {
               <div className="flex size-12 items-center justify-center rounded-2xl bg-muted">
                 <FlaskConical className="size-5 text-muted-foreground" />
               </div>
+
               <h3 className="mt-4 font-semibold">
-                {runs.length === 0 ? "No test runs yet" : "No matching test runs"}
+                {runs.length === 0
+                  ? "No test runs yet"
+                  : "No matching test runs"}
               </h3>
+
               <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                 {runs.length === 0
                   ? "Create your first test run to start tracking execution results."
                   : "Try a different search term or status filter."}
               </p>
+
               {runs.length === 0 && (
                 <button
                   onClick={() => setShowForm(true)}
@@ -427,15 +487,20 @@ export default function TestRunsPage() {
                       <th className="px-5 py-3.5 font-medium">Time</th>
                     </tr>
                   </thead>
+
                   <tbody className="divide-y divide-border">
                     {filteredRuns.map((run) => (
-                      <tr key={run.id} className="transition hover:bg-muted/30">
+                      <tr
+                        key={run.id}
+                        className="transition hover:bg-muted/30"
+                      >
                         <td className="px-5 py-4">
                           <p className="font-medium">{run.name}</p>
                           <p className="mt-1 font-mono text-xs text-muted-foreground">
                             {run.id.slice(0, 8)}
                           </p>
                         </td>
+
                         <td className="px-5 py-4">
                           <p className="font-medium tabular-nums">
                             {run.passed}/{run.total} passed
@@ -444,13 +509,16 @@ export default function TestRunsPage() {
                             {run.failed} failed · {run.skipped} skipped
                           </p>
                         </td>
+
                         <td className="px-5 py-4">
                           <StatusBadge status={run.status} />
                         </td>
+
                         <td className="px-5 py-4 text-muted-foreground">
                           {run.environment.charAt(0) +
                             run.environment.slice(1).toLowerCase()}
                         </td>
+
                         <td className="px-5 py-4 text-muted-foreground">
                           <span className="inline-flex items-center gap-2">
                             <Clock3 className="size-3.5" />
@@ -468,17 +536,28 @@ export default function TestRunsPage() {
                   <article key={run.id} className="space-y-3 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="break-words font-medium">{run.name}</h3>
+                        <h3 className="break-words font-medium">
+                          {run.name}
+                        </h3>
                         <p className="mt-1 font-mono text-xs text-muted-foreground">
                           {run.id.slice(0, 8)} · {run.environment}
                         </p>
                       </div>
+
                       <StatusBadge status={run.status} />
                     </div>
+
                     <p className="text-sm">
-                      <span className="font-semibold">{run.passed}/{run.total}</span> passed
-                      <span className="text-muted-foreground"> · {run.failed} failed · {run.skipped} skipped</span>
+                      <span className="font-semibold">
+                        {run.passed}/{run.total}
+                      </span>{" "}
+                      passed
+                      <span className="text-muted-foreground">
+                        {" "}
+                        · {run.failed} failed · {run.skipped} skipped
+                      </span>
                     </p>
+
                     <p className="text-xs text-muted-foreground">
                       {formatDate(run.startedAt)}
                     </p>

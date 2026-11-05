@@ -1,4 +1,3 @@
-
 import { test, expect } from "@playwright/test";
 
 const existingRuns = [
@@ -65,7 +64,9 @@ test.describe("Test Runs", () => {
     await expect(summaryCards.nth(2)).toContainText("Tests failed");
   });
 
-  test("allows a user to create a successful test run", async ({ page }) => {
+  test("allows a user to create a partially completed test run", async ({
+    page,
+  }) => {
     const savedRuns: Record<string, unknown>[] = [];
     let createdRun: Record<string, unknown> | null = null;
 
@@ -86,7 +87,7 @@ test.describe("Test Runs", () => {
           id: "run-new",
           ...createdRun,
           total: 12,
-          status: "PASSED",
+          status: "PARTIAL",
           startedAt: new Date().toISOString(),
           completedAt: new Date().toISOString(),
         };
@@ -123,13 +124,17 @@ test.describe("Test Runs", () => {
       skipped: 2,
     });
 
-    await expect(
-      page.getByRole("table").getByText("Authentication test suite")
-    ).toBeVisible();
+    const runsTable = page.getByRole("table");
 
     await expect(
-      page.getByRole("status")
-    ).toContainText("Test run created and saved successfully.");
+      runsTable.getByText("Authentication test suite")
+    ).toBeVisible();
+
+    await expect(runsTable.getByText("Partial")).toBeVisible();
+
+    await expect(page.getByRole("status")).toContainText(
+      "Test run created and saved successfully."
+    );
   });
 
   test("allows a user to create a failed test run", async ({ page }) => {
@@ -190,13 +195,89 @@ test.describe("Test Runs", () => {
       skipped: 0,
     });
 
+    const runsTable = page.getByRole("table");
+
     await expect(
-      page.getByRole("table").getByText("Payment failure regression")
+      runsTable.getByText("Payment failure regression")
     ).toBeVisible();
 
     await expect(
-      page.getByRole("status")
-    ).toContainText("Test run created and saved successfully.");
+        runsTable.getByRole("cell", { name: "Failed", exact: true })
+    ).toBeVisible();
+
+    await expect(page.getByRole("status")).toContainText(
+      "Test run created and saved successfully."
+    );
+  });
+
+  test("allows a user to create a fully skipped test run", async ({
+    page,
+  }) => {
+    const savedRuns: Record<string, unknown>[] = [];
+    let createdRun: Record<string, unknown> | null = null;
+
+    await page.route("**/api/test-runs", async (route) => {
+      if (route.request().method() === "GET") {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(savedRuns),
+        });
+        return;
+      }
+
+      if (route.request().method() === "POST") {
+        createdRun = route.request().postDataJSON();
+
+        const newRun = {
+          id: "run-skipped",
+          ...createdRun,
+          total: 4,
+          status: "SKIPPED",
+          startedAt: new Date().toISOString(),
+          completedAt: new Date().toISOString(),
+        };
+
+        savedRuns.push(newRun);
+
+        await route.fulfill({
+          status: 201,
+          contentType: "application/json",
+          body: JSON.stringify(newRun),
+        });
+      }
+    });
+
+    await page.goto("/test-runs");
+
+    await page.getByRole("button", { name: "New test run" }).click();
+
+    await page.getByLabel("Run name").fill("Maintenance window tests");
+    await page.getByLabel("Environment").selectOption("STAGING");
+    await page.getByLabel("Passed").fill("0");
+    await page.getByLabel("Failed").fill("0");
+    await page.getByLabel("Skipped").fill("4");
+
+    await page.getByRole("button", { name: "Save test run" }).click();
+
+    await expect.poll(() => createdRun).not.toBeNull();
+
+    expect(createdRun).toMatchObject({
+      name: "Maintenance window tests",
+      passed: 0,
+      failed: 0,
+      skipped: 4,
+    });
+
+    const runsTable = page.getByRole("table");
+
+    await expect(
+      runsTable.getByText("Maintenance window tests")
+    ).toBeVisible();
+
+    await expect(
+        runsTable.getByRole("cell", { name: "Skipped", exact: true })
+    ).toBeVisible();
   });
 
   test("allows a user to search and filter test runs", async ({ page }) => {
@@ -236,6 +317,71 @@ test.describe("Test Runs", () => {
 
     await expect(
       runsTable.getByText("Checkout smoke tests")
+    ).not.toBeVisible();
+  });
+
+  test("filters partially completed and skipped runs correctly", async ({
+    page,
+  }) => {
+    const runsWithDifferentStatuses = [
+      ...existingRuns,
+      {
+        id: "run-partial",
+        name: "Registration regression",
+        environment: "DEVELOPMENT",
+        passed: 6,
+        failed: 0,
+        skipped: 2,
+        total: 8,
+        status: "PARTIAL",
+        startedAt: "2026-11-02T10:00:00.000Z",
+        completedAt: "2026-11-02T10:05:00.000Z",
+      },
+      {
+        id: "run-skipped",
+        name: "Maintenance window tests",
+        environment: "STAGING",
+        passed: 0,
+        failed: 0,
+        skipped: 4,
+        total: 4,
+        status: "SKIPPED",
+        startedAt: "2026-11-01T10:00:00.000Z",
+        completedAt: "2026-11-01T10:05:00.000Z",
+      },
+    ];
+
+    await page.route("**/api/test-runs", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(runsWithDifferentStatuses),
+      });
+    });
+
+    await page.goto("/test-runs");
+
+    const runsTable = page.getByRole("table");
+    const statusFilter = page.getByLabel("Filter by status");
+
+    await statusFilter.selectOption("PARTIAL");
+
+    await expect(
+      runsTable.getByText("Registration regression")
+    ).toBeVisible();
+
+    await expect(
+      runsTable.getByText("Maintenance window tests")
+    ).not.toBeVisible();
+
+    await statusFilter.selectOption("SKIPPED");
+
+    await expect(
+      runsTable.getByText("Maintenance window tests")
+    ).toBeVisible();
+
+    await expect(
+      runsTable.getByText("Registration regression")
     ).not.toBeVisible();
   });
 });
