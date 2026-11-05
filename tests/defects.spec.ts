@@ -1,7 +1,27 @@
 
 import { test, expect } from "@playwright/test";
 
-const existingDefects = [
+type Defect = {
+  id: string;
+  title: string;
+  description: string;
+  stepsToReproduce: string;
+  expectedResult: string;
+  actualResult: string;
+  severity: string;
+  status: string;
+  environment: string;
+  testCase: null;
+  testRun: null;
+  createdAt: string;
+};
+
+type DefectInput = Omit<
+  Defect,
+  "id" | "testCase" | "testRun" | "createdAt"
+>;
+
+const existingDefects: Defect[] = [
   {
     id: "defect-001",
     title: "Login button does not respond",
@@ -80,13 +100,17 @@ test.describe("Defect Management", () => {
 
     await expect(overviewCards.getByText("Total Defects")).toBeVisible();
     await expect(overviewCards.getByText("Open", { exact: true })).toBeVisible();
-    await expect(overviewCards.getByText("In Progress", { exact: true })).toBeVisible();
-    await expect(overviewCards.getByText("Resolved", { exact: true })).toBeVisible();
+    await expect(
+      overviewCards.getByText("In Progress", { exact: true })
+    ).toBeVisible();
+    await expect(
+      overviewCards.getByText("Resolved", { exact: true })
+    ).toBeVisible();
   });
 
   test("allows a user to report a new defect", async ({ page }) => {
-    const savedDefects = [...existingDefects];
-    let createdDefect: Record<string, unknown> | null = null;
+    const savedDefects: Defect[] = [...existingDefects];
+    let createdDefect: DefectInput | null = null;
 
     await page.route("**/api/defects", async (route) => {
       if (route.request().method() === "GET") {
@@ -99,11 +123,14 @@ test.describe("Defect Management", () => {
       }
 
       if (route.request().method() === "POST") {
-        createdDefect = route.request().postDataJSON();
+        const requestBody =
+          route.request().postDataJSON() as DefectInput;
 
-        const newDefect = {
+        createdDefect = requestBody;
+
+        const newDefect: Defect = {
           id: "defect-new",
-          ...createdDefect,
+          ...requestBody,
           testCase: null,
           testRun: null,
           createdAt: new Date().toISOString(),
@@ -171,7 +198,10 @@ test.describe("Defect Management", () => {
   });
 
   test("allows a user to edit an existing defect", async ({ page }) => {
-    const savedDefects = existingDefects.map((defect) => ({ ...defect }));
+    const savedDefects: Defect[] = existingDefects.map((defect) => ({
+      ...defect,
+    }));
+
     let updatedDefect: Record<string, unknown> | null = null;
 
     await page.route("**/api/defects", async (route) => {
@@ -244,7 +274,10 @@ test.describe("Defect Management", () => {
   test("allows a user to delete a defect after confirmation", async ({
     page,
   }) => {
-    const savedDefects = existingDefects.map((defect) => ({ ...defect }));
+    const savedDefects: Defect[] = existingDefects.map((defect) => ({
+      ...defect,
+    }));
+
     let deleteRequestReceived = false;
 
     await page.route("**/api/defects", async (route) => {
