@@ -56,7 +56,6 @@ for (const [address, prefix] of blockedIPv6) {
   blockedIPv6Addresses.addSubnet(address, prefix, "ipv6");
 }
 
-
 function isPublicAddress(address: string): boolean {
   const family = isIP(address);
 
@@ -77,17 +76,20 @@ function isPublicAddress(address: string): boolean {
   return false;
 }
 
-
 async function resolvePublicHost(hostname: string) {
   if (isIP(hostname)) {
     if (!isPublicAddress(hostname)) {
-      throw new Error("Requests to private or reserved IP addresses are blocked.");
+      throw new Error(
+        "Requests to private or reserved IP addresses are blocked."
+      );
     }
 
-    return [{
-      address: hostname,
-      family: isIP(hostname),
-    }];
+    return [
+      {
+        address: hostname,
+        family: isIP(hostname),
+      },
+    ];
   }
 
   const addresses = await lookup(hostname, {
@@ -99,7 +101,9 @@ async function resolvePublicHost(hostname: string) {
     addresses.length === 0 ||
     addresses.some(({ address }) => !isPublicAddress(address))
   ) {
-    throw new Error("The destination resolves to a private or restricted address.");
+    throw new Error(
+      "The destination resolves to a private or restricted address."
+    );
   }
 
   return addresses;
@@ -122,9 +126,8 @@ async function sendRequest(
   const addresses = await resolvePublicHost(url.hostname);
   const target = addresses[0];
 
-  const transport = url.protocol === "https:"
-    ? httpsRequest
-    : httpRequest;
+  const transport =
+    url.protocol === "https:" ? httpsRequest : httpRequest;
 
   const startTime = Date.now();
 
@@ -139,35 +142,46 @@ async function sendRequest(
         headers: {
           ...headers,
           ...(body && !headers["content-length"]
-            ? { "content-length": Buffer.byteLength(body).toString() }
+            ? {
+                "content-length": Buffer.byteLength(body).toString(),
+              }
             : {}),
         },
-        
-lookup: ((_hostname: string, options: unknown, callback: (
-  error: NodeJS.ErrnoException | null,
-  address: string | { address: string; family: number }[],
-  family?: number
-        ) => void) => {
-        const resolvedAddress = {
+
+        lookup: ((
+          _hostname: string,
+          options: unknown,
+          callback: (
+            error: NodeJS.ErrnoException | null,
+            address: string | { address: string; family: number }[],
+            family?: number
+          ) => void
+        ) => {
+          const resolvedAddress = {
             address: target.address,
             family: target.family,
-        };
+          };
 
-        if (
+          if (
             typeof options === "object" &&
             options !== null &&
             "all" in options &&
             options.all === true
-        ) {
+          ) {
             callback(null, [resolvedAddress]);
-        } else {
-            callback(null, resolvedAddress.address, resolvedAddress.family);
-        }
+          } else {
+            callback(
+              null,
+              resolvedAddress.address,
+              resolvedAddress.family
+            );
+          }
         }) as never,
 
         ...(url.protocol === "https:"
           ? { servername: url.hostname }
           : {}),
+
         agent: false,
       },
       (response) => {
@@ -237,7 +251,9 @@ lookup: ((_hostname: string, options: unknown, callback: (
     );
 
     outgoing.setTimeout(REQUEST_TIMEOUT, () => {
-      outgoing.destroy(new Error("Request timed out after 10 seconds."));
+      outgoing.destroy(
+        new Error("Request timed out after 10 seconds.")
+      );
     });
 
     outgoing.on("error", reject);
@@ -277,20 +293,26 @@ async function executeRequest(
     const nextUrl = new URL(redirect, currentUrl);
 
     if (!["http:", "https:"].includes(nextUrl.protocol)) {
-      throw new Error("Redirect to an unsupported protocol was blocked.");
+      throw new Error(
+        "Redirect to an unsupported protocol was blocked."
+      );
     }
 
     if (nextUrl.username || nextUrl.password) {
-      throw new Error("Redirects containing credentials are not allowed.");
+      throw new Error(
+        "Redirects containing credentials are not allowed."
+      );
     }
 
     if (nextUrl.protocol !== currentUrl.protocol) {
       throw new Error("Cross-protocol redirects are not allowed.");
     }
 
-    if (result.status === 303 ||
-        ((result.status === 301 || result.status === 302) &&
-          currentMethod === "POST")) {
+    if (
+      result.status === 303 ||
+      ((result.status === 301 || result.status === 302) &&
+        currentMethod === "POST")
+    ) {
       currentMethod = "GET";
       currentBody = "";
     }
@@ -302,15 +324,37 @@ async function executeRequest(
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const payload = await request.json();
+  // Parse JSON separately so malformed JSON returns HTTP 400.
+  let payload: unknown;
 
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid JSON request body." },
+      { status: 400 }
+    );
+  }
+
+  // Ensure the parsed request body is a JSON object.
+  if (
+    payload === null ||
+    typeof payload !== "object" ||
+    Array.isArray(payload)
+  ) {
+    return NextResponse.json(
+      { error: "Request body must be a JSON object." },
+      { status: 400 }
+    );
+  }
+
+  try {
     const {
       method = "GET",
       url,
       headers = {},
       body = "",
-    } = payload;
+    } = payload as Record<string, unknown>;
 
     if (
       typeof method !== "string" ||
@@ -346,7 +390,10 @@ export async function POST(request: NextRequest) {
       targetUrl.password
     ) {
       return NextResponse.json(
-        { error: "Only HTTP/HTTPS URLs without embedded credentials are allowed." },
+        {
+          error:
+            "Only HTTP/HTTPS URLs without embedded credentials are allowed.",
+        },
         { status: 400 }
       );
     }
@@ -432,7 +479,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Request execution failed.";
+      error instanceof Error
+        ? error.message
+        : "Request execution failed.";
 
     console.error("API execution failed:", error);
 
