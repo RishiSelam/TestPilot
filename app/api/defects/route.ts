@@ -23,6 +23,7 @@ export async function GET() {
     return NextResponse.json(defects);
   } catch (error) {
     console.error("Failed to fetch defects:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch defects." },
       { status: 500 }
@@ -32,20 +33,43 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body: unknown = await request.json();
+
+    if (
+      typeof body !== "object" ||
+      body === null ||
+      Array.isArray(body)
+    ) {
+      return NextResponse.json(
+        { error: "Request body must be a JSON object." },
+        { status: 400 }
+      );
+    }
+
+    const input = body as Record<string, unknown>;
 
     const {
       title,
-      description = "",
-      stepsToReproduce = "",
-      expectedResult = "",
-      actualResult = "",
       severity = "MEDIUM",
       status = "OPEN",
       environment = "DEVELOPMENT",
       testCaseId = null,
       testRunId = null,
-    } = body;
+    } = input;
+
+    const description =
+      input.description === undefined ? "" : input.description;
+
+    const stepsToReproduce =
+      input.stepsToReproduce === undefined
+        ? ""
+        : input.stepsToReproduce;
+
+    const expectedResult =
+      input.expectedResult === undefined ? "" : input.expectedResult;
+
+    const actualResult =
+      input.actualResult === undefined ? "" : input.actualResult;
 
     if (typeof title !== "string" || !title.trim()) {
       return NextResponse.json(
@@ -63,26 +87,38 @@ export async function POST(request: NextRequest) {
 
     if (textFields.some((value) => typeof value !== "string")) {
       return NextResponse.json(
-        { error: "Defect description and reproduction fields must be text." },
+        {
+          error:
+            "Defect description and reproduction fields must be text.",
+        },
         { status: 400 }
       );
     }
 
-    if (!VALID_SEVERITIES.includes(severity)) {
+    if (
+      typeof severity !== "string" ||
+      !VALID_SEVERITIES.includes(severity)
+    ) {
       return NextResponse.json(
         { error: "Invalid defect severity." },
         { status: 400 }
       );
     }
 
-    if (!VALID_STATUSES.includes(status)) {
+    if (
+      typeof status !== "string" ||
+      !VALID_STATUSES.includes(status)
+    ) {
       return NextResponse.json(
         { error: "Invalid defect status." },
         { status: 400 }
       );
     }
 
-    if (!VALID_ENVIRONMENTS.includes(environment)) {
+    if (
+      typeof environment !== "string" ||
+      !VALID_ENVIRONMENTS.includes(environment)
+    ) {
       return NextResponse.json(
         { error: "Invalid environment." },
         { status: 400 }
@@ -130,10 +166,10 @@ export async function POST(request: NextRequest) {
     const defect = await prisma.defect.create({
       data: {
         title: title.trim(),
-        description,
-        stepsToReproduce,
-        expectedResult,
-        actualResult,
+        description: description as string,
+        stepsToReproduce: stepsToReproduce as string,
+        expectedResult: expectedResult as string,
+        actualResult: actualResult as string,
         severity,
         status,
         environment,
@@ -152,7 +188,15 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(defect, { status: 201 });
   } catch (error) {
+    if (error instanceof SyntaxError) {
+      return NextResponse.json(
+        { error: "Request body contains invalid JSON." },
+        { status: 400 }
+      );
+    }
+
     console.error("Failed to create defect:", error);
+
     return NextResponse.json(
       { error: "Failed to create defect." },
       { status: 500 }
