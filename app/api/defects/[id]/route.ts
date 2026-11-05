@@ -2,9 +2,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-const VALID_SEVERITIES = ["CRITICAL", "HIGH", "MEDIUM", "LOW"];
-const VALID_STATUSES = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"];
-const VALID_ENVIRONMENTS = ["DEVELOPMENT", "STAGING", "PRODUCTION"];
+const VALID_SEVERITIES = ["CRITICAL", "HIGH", "MEDIUM", "LOW"] as const;
+const VALID_STATUSES = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"] as const;
+const VALID_ENVIRONMENTS = ["DEVELOPMENT", "STAGING", "PRODUCTION"] as const;
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -39,6 +39,7 @@ export async function GET(
     return NextResponse.json(defect);
   } catch (error) {
     console.error("Failed to fetch defect:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch defect." },
       { status: 500 }
@@ -52,7 +53,20 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
+    const body: unknown = await request.json();
+
+    if (
+      typeof body !== "object" ||
+      body === null ||
+      Array.isArray(body)
+    ) {
+      return NextResponse.json(
+        { error: "Request body must be a JSON object." },
+        { status: 400 }
+      );
+    }
+
+    const input = body as Record<string, unknown>;
 
     const existingDefect = await prisma.defect.findUnique({
       where: { id },
@@ -79,7 +93,7 @@ export async function PATCH(
       "testRunId",
     ];
 
-    const unknownFields = Object.keys(body).filter(
+    const unknownFields = Object.keys(input).filter(
       (field) => !allowedFields.includes(field)
     );
 
@@ -90,7 +104,7 @@ export async function PATCH(
       );
     }
 
-    const data: Record<string, string | null> = {};
+    const data: Record<string, unknown> = {};
 
     const textFields = [
       "title",
@@ -98,18 +112,20 @@ export async function PATCH(
       "stepsToReproduce",
       "expectedResult",
       "actualResult",
-    ];
+    ] as const;
 
     for (const field of textFields) {
-      if (field in body) {
-        if (typeof body[field] !== "string") {
+      if (field in input) {
+        const value = input[field];
+
+        if (typeof value !== "string") {
           return NextResponse.json(
             { error: `${field} must be text.` },
             { status: 400 }
           );
         }
 
-        if (field === "title" && !body[field].trim()) {
+        if (field === "title" && !value.trim()) {
           return NextResponse.json(
             { error: "Title cannot be empty." },
             { status: 400 }
@@ -117,43 +133,67 @@ export async function PATCH(
         }
 
         data[field] =
-          field === "title" ? body[field].trim() : body[field];
+          field === "title" ? value.trim() : value;
       }
     }
 
-    if ("severity" in body) {
-      if (!VALID_SEVERITIES.includes(body.severity)) {
+    if ("severity" in input) {
+      const value = input.severity;
+
+      if (
+        typeof value !== "string" ||
+        !VALID_SEVERITIES.includes(
+          value as (typeof VALID_SEVERITIES)[number]
+        )
+      ) {
         return NextResponse.json(
           { error: "Invalid defect severity." },
           { status: 400 }
         );
       }
-      data.severity = body.severity;
+
+      data.severity = value;
     }
 
-    if ("status" in body) {
-      if (!VALID_STATUSES.includes(body.status)) {
+    if ("status" in input) {
+      const value = input.status;
+
+      if (
+        typeof value !== "string" ||
+        !VALID_STATUSES.includes(
+          value as (typeof VALID_STATUSES)[number]
+        )
+      ) {
         return NextResponse.json(
           { error: "Invalid defect status." },
           { status: 400 }
         );
       }
-      data.status = body.status;
+
+      data.status = value;
     }
 
-    if ("environment" in body) {
-      if (!VALID_ENVIRONMENTS.includes(body.environment)) {
+    if ("environment" in input) {
+      const value = input.environment;
+
+      if (
+        typeof value !== "string" ||
+        !VALID_ENVIRONMENTS.includes(
+          value as (typeof VALID_ENVIRONMENTS)[number]
+        )
+      ) {
         return NextResponse.json(
           { error: "Invalid environment." },
           { status: 400 }
         );
       }
-      data.environment = body.environment;
+
+      data.environment = value;
     }
 
-    for (const field of ["testCaseId", "testRunId"]) {
-      if (field in body) {
-        const value = body[field];
+    for (const field of ["testCaseId", "testRunId"] as const) {
+      if (field in input) {
+        const value = input[field];
 
         if (value !== null && typeof value !== "string") {
           return NextResponse.json(
@@ -162,36 +202,37 @@ export async function PATCH(
           );
         }
 
+        if (value !== null) {
+          const relatedRecord =
+            field === "testCaseId"
+              ? await prisma.testCase.findUnique({
+                  where: { id: value },
+                  select: { id: true },
+                })
+              : await prisma.testRun.findUnique({
+                  where: { id: value },
+                  select: { id: true },
+                });
+
+          if (!relatedRecord) {
+            return NextResponse.json(
+              {
+                error: `The referenced ${field === "testCaseId" ? "test case" : "test run"} does not exist.`,
+              },
+              { status: 404 }
+            );
+          }
+        }
+
         data[field] = value;
       }
     }
 
-    if (data.testCaseId) {
-      const testCase = await prisma.testCase.findUnique({
-        where: { id: data.testCaseId },
-        select: { id: true },
-      });
-
-      if (!testCase) {
-        return NextResponse.json(
-          { error: "Referenced test case was not found." },
-          { status: 404 }
-        );
-      }
-    }
-
-    if (data.testRunId) {
-      const testRun = await prisma.testRun.findUnique({
-        where: { id: data.testRunId },
-        select: { id: true },
-      });
-
-      if (!testRun) {
-        return NextResponse.json(
-          { error: "Referenced test run was not found." },
-          { status: 404 }
-        );
-      }
+    if (Object.keys(data).length === 0) {
+      return NextResponse.json(
+        { error: "Provide at least one field to update." },
+        { status: 400 }
+      );
     }
 
     const updatedDefect = await prisma.defect.update({
@@ -209,7 +250,15 @@ export async function PATCH(
 
     return NextResponse.json(updatedDefect);
   } catch (error) {
+    if (error instanceof SyntaxError) {
+      return NextResponse.json(
+        { error: "Request body contains invalid JSON." },
+        { status: 400 }
+      );
+    }
+
     console.error("Failed to update defect:", error);
+
     return NextResponse.json(
       { error: "Failed to update defect." },
       { status: 500 }
@@ -245,6 +294,7 @@ export async function DELETE(
     });
   } catch (error) {
     console.error("Failed to delete defect:", error);
+
     return NextResponse.json(
       { error: "Failed to delete defect." },
       { status: 500 }
