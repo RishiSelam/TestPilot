@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
 import TestCasesView from "@/components/test-cases-view";
 import { useTheme } from "next-themes";
 import {
@@ -80,7 +81,12 @@ const issues = [
   },
 ];
 
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
 export default function Home() {
+  const router = useRouter();
   const { theme, setTheme } = useTheme();
 
   const [activePage, setActivePage] = useState("Overview");
@@ -89,11 +95,11 @@ export default function Home() {
   const [showRunMessage, setShowRunMessage] = useState(false);
 
   // Prevent theme-related hydration mismatches.
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    getClientSnapshot,
+    getServerSnapshot
+  );
 
   // Load test runs from the database-backed API.
   const [testRuns, setTestRuns] = useState<TestRun[]>([]);
@@ -208,17 +214,17 @@ export default function Home() {
                     key={item.label}
                     onClick={() => {
                       if (item.label === "API Testing") {
-                        window.location.href = "/api-testing";
+                        router.push("/api-testing");
                         return;
                       }
 
                       if (item.label === "Test Runs") {
-                        window.location.href = "/test-runs";
+                        router.push("/test-runs");
                         return;
                       }
 
                       if (item.label === "Defects") {
-                        window.location.href = "/defects";
+                        router.push("/defects");
                         return;
                       }
 
@@ -374,6 +380,52 @@ export default function Home() {
             </div>
           </header>
 
+          {/* Mobile navigation */}
+          <nav
+            aria-label="Mobile navigation"
+            className="flex gap-1 overflow-x-auto border-b bg-background px-3 py-2 md:hidden"
+          >
+            {navigation.map((item) => {
+              const Icon = item.icon;
+              const active = activePage === item.label;
+
+              return (
+                <button
+                  key={item.label}
+                  onClick={() => {
+                    if (item.label === "API Testing") {
+                      router.push("/api-testing");
+                      return;
+                    }
+
+                    if (item.label === "Test Runs") {
+                      router.push("/test-runs");
+                      return;
+                    }
+
+                    if (item.label === "Defects") {
+                      router.push("/defects");
+                      return;
+                    }
+
+                    setActivePage(item.label);
+                    setQuery("");
+                    setShowRunMessage(false);
+                  }}
+                  className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="size-4" />
+                  {item.label}
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Notifications panel */}
           {showNotifications && (
             <div className="absolute right-5 top-[76px] z-20 w-72 rounded-2xl border bg-card p-4 shadow-xl">
               <div className="flex items-center justify-between">
@@ -438,8 +490,8 @@ export default function Home() {
                 <div>
                   <p className="text-sm font-semibold">Test run setup</p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    The runner isn't connected yet. Next we'll implement actual
-                    test execution.
+                    The runner isn&apos;t connected yet. Next we&apos;ll implement
+                    actual test execution.
                   </p>
                 </div>
                 <Button
@@ -672,7 +724,7 @@ export default function Home() {
                         size="sm"
                         className="gap-1 rounded-lg text-muted-foreground"
                         onClick={() => {
-                          window.location.href = "/test-runs";
+                          router.push("/test-runs");
                         }}
                       >
                         View all <ArrowRight className="size-3.5" />
