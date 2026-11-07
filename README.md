@@ -1,128 +1,292 @@
 # TestPilot
 
-TestPilot is a QA Engineer portfolio project I'm building to make software testing more organized and easier to manage. The idea is to create a single place where I can manage test cases, track their status, and eventually run tests and monitor results through a clean dashboard.
+**A QA Engineering Dashboard for Test Case Management, Test Execution, API Testing, and Defect Tracking.**
 
-I built it using Next.js, TypeScript, Tailwind CSS, Prisma, SQLite, and Playwright. I'm developing it step by step, starting with the interface and test case management before connecting everything to the backend.
+TestPilot is a QA engineering portfolio project I'm building to bring different software testing activities into one place. It provides a centralized interface to manage test cases, organize test runs, execute API requests, and track defects.
+
+I wanted to build something that goes beyond a basic testing dashboard and demonstrates how different parts of a QA workflow can work together, from writing test cases to recording defects and validating application behavior.
+
+## Features
+
+### 1. Dashboard
+- Centralized overview of testing activities.
+- Summary of test cases, test runs, and defects.
+- Navigation across the application's modules.
+- Light and dark themes.
+
+### 2. Test Case Management
+- Create, edit, and delete test cases.
+- Record test descriptions, execution steps, and expected results.
+- Assign priorities: Low, Medium, High, and Critical.
+- Track statuses: Draft, Ready, and Blocked.
+- Search and filter test cases.
+- Persistent database-backed storage.
+
+### 3. Test Run Management
+- Create and manage test runs.
+- Record the testing environment.
+- Track passed, failed, and skipped test counts.
+- Maintain execution status and timestamps.
+- Associate defects with relevant test runs.
+
+### 4. API Testing
+- Manage saved API requests.
+- Work with HTTP methods, URLs, headers, and request bodies.
+- Execute API requests through the backend.
+- Inspect API responses and validate request behavior.
+
+### 5. Defect Management
+- Create, edit, and delete defects.
+- Record descriptions and reproduction steps.
+- Document expected and actual results.
+- Assign severity and status.
+- Associate defects with test cases and test runs.
+- Search and filter defect records.
+
+## Tech Stack
+
+| Category | Technology |
+|---|---|
+| Frontend | Next.js 16, React 19, TypeScript |
+| Styling | Tailwind CSS 4, shadcn/ui |
+| Backend | Next.js Route Handlers |
+| Database | SQLite |
+| ORM | Prisma 7 |
+| Database Adapter | better-sqlite3 |
+| Automated Testing | Playwright |
+| Code Quality | ESLint |
+| Package Manager | pnpm |
+
+## Architecture
+
+TestPilot uses a Next.js application structure with frontend pages, backend API routes, and a database layer.
+
+- **Frontend:** React components provide the dashboard and individual testing modules.
+- **Backend:** Next.js Route Handlers process API requests and perform application operations.
+- **Database:** SQLite stores application data.
+- **ORM:** Prisma manages database models and database operations.
+- **Testing:** Playwright automates browser-based tests to verify important application workflows.
+
+### Database Models
+
+The Prisma schema currently contains four primary models:
+
+| Model | Purpose |
+|---|---|
+| `TestCase` | Stores test case details, steps, priority, and status. |
+| `TestRun` | Stores execution information, environment, and test results. |
+| `Defect` | Stores defect details, severity, status, and relationships. |
+| `ApiRequest` | Stores API request configurations. |
+
+Defects can optionally be linked to test cases and test runs. If a linked record is deleted, the relationship is set to null rather than deleting the defect.
+
+## API Routes
+
+The application exposes the following backend routes:
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/test-cases` | Retrieve test cases |
+| `POST /api/test-cases` | Create a test case |
+| `PATCH /api/test-cases/:id` | Update a test case |
+| `DELETE /api/test-cases/:id` | Delete a test case |
+| `/api/test-runs` | Test run management |
+| `/api/defects` | Defect collection management |
+| `/api/defects/:id` | Individual defect operations |
+| `/api/api-requests` | Saved API request management |
+| `/api/api-requests/:id` | Individual API request operations |
+| `POST /api/api-testing/execute` | Execute an API request |
+
+The API routes are implemented using Next.js Route Handlers.
+
+## Automated Testing
+
+I use Playwright to automate important application workflows and catch regressions while developing TestPilot.
+
+The current automated test suite contains **41 passing tests** across seven test files.
+
+| Test Area | Tests Passed |
+|---|---:|
+| API Request Validation | 13 |
+| API Testing Interface | 7 |
+| Data Integrity | 3 |
+| Defect Management | 5 |
+| Dashboard | 3 |
+| Test Cases | 4 |
+| Test Runs | 6 |
+| **Total** | **41/41** |
+
+### Running the Tests
+
+Start the development server in one terminal:
+
+```bash
+pnpm dev
+```
+
+In a second terminal, execute:
+
+```bash
+pnpm exec playwright test --workers=1
+```
+
+The Playwright suite includes both interface-level tests and API validation tests. Some frontend workflows use mocked API responses, so the test count should not be interpreted as 41 independent database integration tests.
+
+### Code Quality and Production Build
+
+Run ESLint:
+
+```bash
+pnpm lint
+```
+
+Create a production build:
+
+```bash
+pnpm build
+```
+
+Both checks currently pass.
 
 ## Getting Started
 
-First, clone the repository and navigate to the project folder:
+### Prerequisites
+
+- Node.js
+- pnpm
+- Git
+
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/RishiSelam/TestPilot.git
 cd TestPilot
 ```
 
-Install the dependencies:
+### 2. Install dependencies
 
 ```bash
 pnpm install
 ```
 
-Create a `.env` file in the root directory and add:
+### 3. Configure environment variables
+
+Create a `.env` file in the project root:
 
 ```env
 DATABASE_URL="file:./dev.db"
 ```
 
-Set up the Prisma database and generate the Prisma client:
+### 4. Set up the database
+
+Apply the existing Prisma migrations:
 
 ```bash
 pnpm exec prisma migrate deploy
+```
+
+Generate the Prisma client:
+
+```bash
 pnpm exec prisma generate
 ```
 
-Start the development server:
+### 5. Start the development server
 
 ```bash
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser to view TestPilot.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## What I've Built So Far
+## Project Structure
 
-### 1. Dashboard
-
-I created a dashboard with a sidebar, navigation, and light and dark themes. It provides an overview of the project and includes sample metrics and recent test run information. Some of the dashboard data is currently for demonstration purposes.
-
-### 2. Test Case Management
-
-I built a test cases page where I can:
-
-- Create new test cases.
-- Edit and delete existing test cases.
-- Add a title, description, test steps, and expected results.
-- Assign priorities such as Low, Medium, High, and Critical.
-- Track statuses such as Draft, Ready, and Blocked.
-- Search and filter test cases.
-
-The current frontend stores test case data in the browser's `localStorage`, so changes persist in that browser. Connecting this interface to the backend database is part of my next phase.
-
-### 3. Backend API and Database
-
-I set up API routes using Next.js Route Handlers and connected them to an SQLite database through Prisma ORM.
-
-The API currently supports:
-
-- `GET /api/test-cases` to retrieve test cases.
-- `POST /api/test-cases` to create a test case.
-- `PATCH /api/test-cases/:id` to update a test case.
-- `DELETE /api/test-cases/:id` to delete a test case.
-
-I tested these operations locally against the database to verify that records could be created, retrieved, updated, and deleted.
-
-**Current limitation:** The frontend is not yet connected to these API routes. The UI currently uses `localStorage`, while the API works with SQLite.
-
-### 4. Automated Testing
-
-I added Playwright smoke tests to check important parts of the application, including:
-
-- Whether the dashboard loads correctly.
-- Whether recent test run information is displayed.
-- Whether the theme toggle works.
-
-These tests help catch basic issues when making changes to the application.
-
-To run the smoke tests, start the development server in one terminal, then run this command in another:
-
-```bash
-pnpm exec playwright test
+```text
+TestPilot/
+│
+├── app/
+│   ├── api/
+│   │   ├── api-requests/
+│   │   ├── api-testing/
+│   │   ├── defects/
+│   │   ├── test-cases/
+│   │   └── test-runs/
+│   │
+│   ├── api-testing/
+│   ├── defects/
+│   ├── test-runs/
+│   └── page.tsx
+│
+├── components/
+│   ├── defects-view.tsx
+│   ├── test-cases-view.tsx
+│   └── ...
+│
+├── lib/
+│   └── prisma.ts
+│
+├── prisma/
+│   ├── migrations/
+│   └── schema.prisma
+│
+├── tests/
+│   ├── api-testing-validation.spec.ts
+│   ├── api-testing.spec.ts
+│   ├── data-integrity.spec.ts
+│   ├── defects.spec.ts
+│   ├── smoke.spec.ts
+│   ├── test-cases.spec.ts
+│   └── test-runs.spec.ts
+│
+├── package.json
+└── README.md
 ```
 
-## Tech Stack
+## Screenshots
 
-- **Frontend:** Next.js, React, TypeScript
-- **Styling:** Tailwind CSS, shadcn/ui
-- **Backend:** Next.js Route Handlers
-- **Database:** SQLite
-- **ORM:** Prisma
-- **Automated Testing:** Playwright
-- **Package Manager:** pnpm
+Screenshots of the application will be added here as the project documentation is finalized.
 
-## How It Works
+| Module | Preview |
+|---|---|
+| Dashboard | Coming soon |
+| Test Cases | Coming soon |
+| Test Runs | Coming soon |
+| API Testing | Coming soon |
+| Defects | Coming soon |
 
-The project currently has three main parts:
+## Current Development Status
 
-1. **Frontend:** The dashboard and test case management interface, where users can interact with test cases.
-2. **Backend:** API routes that handle creating, retrieving, updating, and deleting test cases.
-3. **Database:** SQLite stores test case records, with Prisma handling database operations.
+The core application modules, database-backed operations, API functionality, and automated testing suite have been implemented.
 
-The frontend and backend are currently separate. My next step is to connect the UI to the API so that test cases can be managed through the database rather than browser storage.
+I'm currently focusing on final verification, documentation, and preparing the application for deployment.
 
-## What's Next?
+Planned improvements include:
 
-I'm continuing to develop TestPilot, with the following improvements planned:
+- Migrating the database from SQLite to PostgreSQL for production.
+- Deploying the application using Render and Neon.
+- Performing production-level smoke testing.
 
-- Connect the test case management interface to the backend API.
-- Add proper loading states and error handling.
-- Expand automated tests for the API and frontend.
-- Implement test execution and test result tracking.
-- Connect dashboard metrics to actual application data instead of sample values.
+## Screenshots
 
-## Learn More
+### Dashboard
+![TestPilot Dashboard](public/screenshots/dashboard.png)
 
-Here are some of the technologies I'm using to build this project:
+### Test Cases
+![Test Case Management](public/screenshots/test-cases.png)
+
+### Test Runs
+![Test Run Management](public/screenshots/test-runs.png)
+
+### API Testing
+![API Testing](public/screenshots/api-testing.png)
+
+### API Testing - Additional View
+![API Testing Details](public/screenshots/api-testing-details.png)
+
+### Defect Management
+![Defect Management](public/screenshots/defects.png)
+
+## Useful Resources
 
 - [Next.js Documentation](https://nextjs.org/docs)
 - [TypeScript Documentation](https://www.typescriptlang.org/docs/)
@@ -132,6 +296,8 @@ Here are some of the technologies I'm using to build this project:
 
 ## Repository
 
-You can find the source code here:
+**GitHub:** [RishiSelam/TestPilot](https://github.com/RishiSelam/TestPilot)
 
-[TestPilot on GitHub](https://github.com/RishiSelam/TestPilot)
+---
+
+*Built as a hands-on QA engineering portfolio project.*
