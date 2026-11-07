@@ -242,17 +242,6 @@ TestPilot/
 └── README.md
 ```
 
-## Screenshots
-
-Screenshots of the application will be added here as the project documentation is finalized.
-
-| Module | Preview |
-|---|---|
-| Dashboard | Coming soon |
-| Test Cases | Coming soon |
-| Test Runs | Coming soon |
-| API Testing | Coming soon |
-| Defects | Coming soon |
 
 ## Current Development Status
 
