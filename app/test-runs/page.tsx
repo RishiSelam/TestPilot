@@ -1,3 +1,4 @@
+
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
@@ -92,9 +93,6 @@ export default function TestRunsPage() {
   const [skipped, setSkipped] = useState("0");
 
   const loadRuns = useCallback(async () => {
-    setLoading(true);
-    setError("");
-
     try {
       const response = await fetch("/api/test-runs", {
         cache: "no-store",
@@ -116,6 +114,7 @@ export default function TestRunsPage() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Async API fetch updates state after the request resolves.
     void loadRuns();
   }, [loadRuns]);
 
@@ -184,6 +183,8 @@ export default function TestRunsPage() {
       setShowForm(false);
       setSuccess("Test run created and saved successfully.");
 
+      setLoading(true);
+      setError("");
       await loadRuns();
     } catch (err) {
       setError(
@@ -225,7 +226,11 @@ export default function TestRunsPage() {
 
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => void loadRuns()}
+              onClick={() => {
+                setLoading(true);
+                setError("");
+                void loadRuns();
+              }}
               disabled={loading}
               className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border px-3 text-sm font-medium transition hover:bg-muted disabled:opacity-50"
             >

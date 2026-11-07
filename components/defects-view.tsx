@@ -66,7 +66,10 @@ const statusStyles: Record<string, string> = {
 };
 
 function readable(value: string) {
-  return value.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  return value
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export default function DefectsView() {
@@ -82,9 +85,6 @@ export default function DefectsView() {
   const [saving, setSaving] = useState(false);
 
   const fetchDefects = useCallback(async () => {
-    setLoading(true);
-    setError("");
-
     try {
       const response = await fetch("/api/defects");
       if (!response.ok) throw new Error("Could not load defects.");
@@ -99,7 +99,8 @@ export default function DefectsView() {
   }, []);
 
   useEffect(() => {
-    fetchDefects();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Async API fetch updates state after the request resolves.
+    void fetchDefects();
   }, [fetchDefects]);
 
   const filteredDefects = useMemo(() => {
@@ -172,6 +173,9 @@ export default function DefectsView() {
       setShowForm(false);
       setEditingId(null);
       setForm(emptyForm);
+
+      setLoading(true);
+      setError("");
       await fetchDefects();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -189,6 +193,9 @@ export default function DefectsView() {
       });
 
       if (!response.ok) throw new Error("Could not delete the defect.");
+
+      setLoading(true);
+      setError("");
       await fetchDefects();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -205,7 +212,6 @@ export default function DefectsView() {
   return (
     <main className="min-h-screen bg-background p-5 md:p-8">
       <div className="mx-auto max-w-7xl space-y-7">
-        {/* Header */}
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
@@ -222,10 +228,18 @@ export default function DefectsView() {
 
           <div className="flex gap-2">
             <button
-              onClick={fetchDefects}
-              className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-muted"
+              onClick={() => {
+                setLoading(true);
+                setError("");
+                void fetchDefects();
+              }}
+              disabled={loading}
+              className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50"
             >
-              <RefreshCw size={16} />
+              <RefreshCw
+                size={16}
+                className={loading ? "animate-spin" : ""}
+              />
               Refresh
             </button>
             <button
@@ -238,15 +252,16 @@ export default function DefectsView() {
           </div>
         </div>
 
-        {/* Error message */}
         {error && (
-          <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/5 p-3 text-sm text-red-500">
+          <div
+            role="alert"
+            className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/5 p-3 text-sm text-red-500"
+          >
             <AlertCircle size={17} />
             {error}
           </div>
         )}
 
-        {/* Overview cards */}
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
             label="Total Defects"
@@ -274,7 +289,6 @@ export default function DefectsView() {
           />
         </section>
 
-        {/* Defect table */}
         <section className="rounded-xl border bg-card">
           <div className="flex flex-col justify-between gap-4 border-b p-5 lg:flex-row lg:items-center">
             <div>
@@ -294,6 +308,7 @@ export default function DefectsView() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search defects..."
+                  aria-label="Search defects"
                   className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 sm:w-56"
                 />
               </div>
@@ -301,6 +316,7 @@ export default function DefectsView() {
               <select
                 value={severityFilter}
                 onChange={(e) => setSeverityFilter(e.target.value)}
+                aria-label="Filter by severity"
                 className="rounded-lg border bg-background px-3 py-2 text-sm"
               >
                 <option value="ALL">All Severities</option>
@@ -313,6 +329,7 @@ export default function DefectsView() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
+                aria-label="Filter by status"
                 className="rounded-lg border bg-background px-3 py-2 text-sm"
               >
                 <option value="ALL">All Statuses</option>
@@ -387,7 +404,7 @@ export default function DefectsView() {
                         {new Date(defect.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-5 py-4">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => startEdit(defect)}
                             className="rounded-md border px-3 py-1.5 text-xs hover:bg-muted"
@@ -397,7 +414,8 @@ export default function DefectsView() {
                           <button
                             onClick={() => deleteDefect(defect.id)}
                             aria-label="Delete defect"
-                            className="rounded-md border p-1.5 text-red-500 hover:bg-red-500/10"
+                            title="Delete defect"
+                            className="flex size-8 items-center justify-center rounded-md border text-red-500 hover:bg-red-500/10"
                           >
                             <Trash2 size={15} />
                           </button>
@@ -411,7 +429,6 @@ export default function DefectsView() {
           )}
         </section>
 
-        {/* Create / Edit form */}
         {showForm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border bg-card shadow-xl">
@@ -457,9 +474,11 @@ export default function DefectsView() {
                 <FormField label="Steps to Reproduce">
                   <textarea
                     value={form.stepsToReproduce}
-                    onChange={(e) => updateField("stepsToReproduce", e.target.value)}
+                    onChange={(e) =>
+                      updateField("stepsToReproduce", e.target.value)
+                    }
                     rows={3}
-                    placeholder="1. Open the login page&#10;2. Enter credentials&#10;3. Click Login"
+                    placeholder={"1. Open the login page\n2. Enter credentials\n3. Click Login"}
                     className="form-input"
                   />
                 </FormField>
@@ -468,7 +487,9 @@ export default function DefectsView() {
                   <FormField label="Expected Result">
                     <textarea
                       value={form.expectedResult}
-                      onChange={(e) => updateField("expectedResult", e.target.value)}
+                      onChange={(e) =>
+                        updateField("expectedResult", e.target.value)
+                      }
                       rows={3}
                       className="form-input"
                     />
@@ -476,7 +497,9 @@ export default function DefectsView() {
                   <FormField label="Actual Result">
                     <textarea
                       value={form.actualResult}
-                      onChange={(e) => updateField("actualResult", e.target.value)}
+                      onChange={(e) =>
+                        updateField("actualResult", e.target.value)
+                      }
                       rows={3}
                       className="form-input"
                     />
@@ -536,7 +559,11 @@ export default function DefectsView() {
                     disabled={saving}
                     className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
                   >
-                    {saving ? "Saving..." : editingId ? "Save Changes" : "Create Defect"}
+                    {saving
+                      ? "Saving..."
+                      : editingId
+                        ? "Save Changes"
+                        : "Create Defect"}
                   </button>
                 </div>
               </form>

@@ -41,15 +41,20 @@ function normalizeCase(data: Record<string, unknown>): TestCase {
   const status = String(data.status ?? "DRAFT").toUpperCase();
 
   const normalizedPriority: Priority =
-    priority === "LOW" ? "Low"
-    : priority === "HIGH" ? "High"
-    : priority === "CRITICAL" ? "Critical"
-    : "Medium";
+    priority === "LOW"
+      ? "Low"
+      : priority === "HIGH"
+        ? "High"
+        : priority === "CRITICAL"
+          ? "Critical"
+          : "Medium";
 
   const normalizedStatus: Status =
-    status === "READY" || status === "ACTIVE" ? "Ready"
-    : status === "BLOCKED" || status === "ARCHIVED" ? "Blocked"
-    : "Draft";
+    status === "READY" || status === "ACTIVE"
+      ? "Ready"
+      : status === "BLOCKED" || status === "ARCHIVED"
+        ? "Blocked"
+        : "Draft";
 
   return {
     id: String(data.id ?? ""),
@@ -103,14 +108,13 @@ export default function TestCasesView() {
   const [form, setForm] = useState<TestCaseForm>(emptyForm);
 
   async function loadCases() {
-    setLoaded(false);
-    setLoadingError("");
-
     try {
       const data = await apiRequest<Record<string, unknown>[]>(
         "/api/test-cases"
       );
+
       setCases(data.map(normalizeCase));
+      setLoadingError("");
     } catch (error) {
       setLoadingError(
         error instanceof Error ? error.message : "Could not load test cases."
@@ -121,6 +125,7 @@ export default function TestCasesView() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Async API fetch updates state after the request resolves.
     void loadCases();
   }, []);
 
@@ -192,6 +197,7 @@ export default function TestCasesView() {
         );
 
         const normalized = normalizeCase(updated);
+
         setCases((current) =>
           current.map((item) =>
             item.id === editingId ? normalized : item
@@ -214,7 +220,9 @@ export default function TestCasesView() {
       setForm(emptyForm);
     } catch (error) {
       setActionError(
-        error instanceof Error ? error.message : "Could not save the test case."
+        error instanceof Error
+          ? error.message
+          : "Could not save the test case."
       );
     } finally {
       setSaving(false);
@@ -241,7 +249,9 @@ export default function TestCasesView() {
       setCases((current) => current.filter((item) => item.id !== id));
     } catch (error) {
       setActionError(
-        error instanceof Error ? error.message : "Could not delete the test case."
+        error instanceof Error
+          ? error.message
+          : "Could not delete the test case."
       );
     } finally {
       setDeletingId(null);
@@ -352,7 +362,11 @@ export default function TestCasesView() {
               {loadingError}
             </p>
             <button
-              onClick={() => void loadCases()}
+              onClick={() => {
+                setLoaded(false);
+                setLoadingError("");
+                void loadCases();
+              }}
               className="rounded-xl border px-4 py-2 text-sm font-medium hover:bg-muted"
             >
               Try again
@@ -520,7 +534,9 @@ export default function TestCasesView() {
                   onChange={(event) =>
                     setForm({ ...form, steps: event.target.value })
                   }
-                  placeholder={"1. Open the login page\n2. Enter valid credentials\n3. Click Sign in"}
+                  placeholder={
+                    "1. Open the login page\n2. Enter valid credentials\n3. Click Sign in"
+                  }
                   className={inputClass}
                 />
               </div>
@@ -607,8 +623,8 @@ export default function TestCasesView() {
                   {saving
                     ? "Saving..."
                     : editingId
-                    ? "Save changes"
-                    : "Create test case"}
+                      ? "Save changes"
+                      : "Create test case"}
                 </button>
               </div>
             </form>
