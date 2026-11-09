@@ -172,8 +172,8 @@ test.describe("Defect Management", () => {
       .getByLabel("Actual Result")
       .fill("The page remains blank.");
 
-    await page.getByLabel("Severity").selectOption("HIGH");
-    await page.getByLabel("Status").selectOption("OPEN");
+    await page.locator("select.form-input").nth(0).selectOption("HIGH");
+    await page.locator("select.form-input").nth(1).selectOption("OPEN");
     await page.getByLabel("Environment").selectOption("STAGING");
 
     await page.getByRole("button", { name: "Create Defect" }).click();
@@ -253,8 +253,8 @@ test.describe("Defect Management", () => {
       .getByLabel("Title")
       .fill("Login button responds slowly");
 
-    await page.getByLabel("Severity").selectOption("MEDIUM");
-    await page.getByLabel("Status").selectOption("IN_PROGRESS");
+    await page.locator("select.form-input").nth(0).selectOption("MEDIUM");
+    await page.locator("select.form-input").nth(1).selectOption("IN_PROGRESS");
 
     await page.getByRole("button", { name: "Save Changes" }).click();
 
