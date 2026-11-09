@@ -758,17 +758,17 @@ export default function Home() {
                                 >
                                   <td className="px-6 py-4">
                                     <p className="font-medium">{run.name}</p>
-                                    <p className="mt-1 text-xs text-muted-foreground">
+                                    <p className="mt-1 font-mono text-[11px] text-muted-foreground">
                                       {run.id.slice(0, 8)} ·{" "}
                                       {run.environment.charAt(0) +
                                         run.environment.slice(1).toLowerCase()}
                                     </p>
                                   </td>
                                   <td className="px-4 py-4">
-                                    <p className="font-medium">
+                                    <p className="font-mono text-sm font-semibold">
                                       {run.passed}/{run.total}
                                     </p>
-                                    <p className="mt-1 text-xs text-muted-foreground">
+                                    <p className="mt-1 font-mono text-[11px] text-muted-foreground">
                                       {run.failed} failed
                                     </p>
                                   </td>
@@ -785,7 +785,7 @@ export default function Home() {
                                         run.status.slice(1).toLowerCase()}
                                     </Badge>
                                   </td>
-                                  <td className="px-6 py-4 text-right text-xs text-muted-foreground">
+                                  <td className="px-6 py-4 text-right font-mono text-[11px] text-muted-foreground">
                                     {new Date(run.startedAt).toLocaleString()}
                                   </td>
                                 </tr>
@@ -830,7 +830,7 @@ export default function Home() {
                         <button
                           key={issue.id}
                           onClick={() => setActivePage("Defects")}
-                          className="flex w-full items-start gap-3 rounded-xl p-3 text-left transition-colors hover:bg-muted/60"
+                          className="flex w-full items-start gap-3 rounded-xl border border-transparent p-3 text-left transition-all hover:border-border/70 hover:bg-muted/40"
                         >
                           <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-500">
                             <Bug className="size-4" />
@@ -839,7 +839,7 @@ export default function Home() {
                             <p className="text-sm font-medium leading-5">
                               {issue.title}
                             </p>
-                            <p className="mt-1 text-xs text-muted-foreground">
+                            <p className="mt-1 font-mono text-[11px] text-muted-foreground">
                               {issue.id} · {issue.area}
                             </p>
                             <div className="mt-2">
