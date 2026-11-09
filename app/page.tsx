@@ -211,6 +211,7 @@ export default function Home() {
                 return (
                   <button
                     key={item.label}
+                    aria-current={active ? "page" : undefined}
                     onClick={() => {
                       if (item.label === "API Testing") {
                         router.push("/api-testing");
@@ -230,7 +231,7 @@ export default function Home() {
                       setActivePage(item.label);
                       setQuery("");
                     }}
-                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
+                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                       active
                         ? "bg-primary text-primary-foreground shadow-sm"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -390,6 +391,7 @@ export default function Home() {
               return (
                 <button
                   key={item.label}
+                  aria-current={active ? "page" : undefined}
                   onClick={() => {
                     if (item.label === "API Testing") {
                       router.push("/api-testing");
@@ -409,7 +411,7 @@ export default function Home() {
                     setActivePage(item.label);
                     setQuery("");
                   }}
-                  className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                  className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                     active
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
