@@ -92,7 +92,6 @@ export default function Home() {
   const [activePage, setActivePage] = useState("Overview");
   const [query, setQuery] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showRunMessage, setShowRunMessage] = useState(false);
 
   // Prevent theme-related hydration mismatches.
   const mounted = useSyncExternalStore(
@@ -230,7 +229,6 @@ export default function Home() {
 
                       setActivePage(item.label);
                       setQuery("");
-                      setShowRunMessage(false);
                     }}
                     className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
                       active
@@ -371,7 +369,7 @@ export default function Home() {
               <Button
                 size="sm"
                 className="h-9 gap-2 rounded-xl px-3"
-                onClick={() => setShowRunMessage(true)}
+                onClick={() => router.push("/test-runs?new=1")}
               >
                 <Play className="size-3.5" />
                 <span className="hidden sm:inline">New test run</span>
@@ -410,7 +408,6 @@ export default function Home() {
 
                     setActivePage(item.label);
                     setQuery("");
-                    setShowRunMessage(false);
                   }}
                   className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
                     active
@@ -475,7 +472,6 @@ export default function Home() {
                     className="h-9 gap-2 rounded-xl"
                     onClick={() => {
                       setActivePage("Test Cases");
-                      setShowRunMessage(false);
                     }}
                   >
                     <Plus className="size-4" />
@@ -484,25 +480,6 @@ export default function Home() {
                 )}
               </div>
             </div>
-
-            {showRunMessage && activePage !== "Test Cases" && (
-              <div className="mb-6 flex flex-col justify-between gap-3 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4 sm:flex-row sm:items-center">
-                <div>
-                  <p className="text-sm font-semibold">Test run setup</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    The runner isn&apos;t connected yet. Next we&apos;ll implement
-                    actual test execution.
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowRunMessage(false)}
-                >
-                  Got it
-                </Button>
-              </div>
-            )}
 
             {activePage === "Test Cases" ? (
               <TestCasesView />

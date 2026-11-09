@@ -118,6 +118,13 @@ export default function TestRunsPage() {
     void loadRuns();
   }, [loadRuns]);
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("new") === "1") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Open the form requested by the dashboard action.
+      setShowForm(true);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
   const filteredRuns = runs.filter((run) => {
     const matchesSearch =
       `${run.name} ${run.id} ${run.environment}`
