@@ -521,7 +521,7 @@ export default function Home() {
                 </div>
 
                 <div className="mb-8 grid gap-5 xl:grid-cols-[1.65fr_1fr]">
-                  <Card className="overflow-hidden rounded-2xl shadow-none">
+                  <Card className="overflow-hidden rounded-2xl border-border/70 bg-card shadow-sm">
                     <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                       <div>
                         <CardTitle className="text-base font-semibold">
@@ -595,7 +595,7 @@ export default function Home() {
                     </CardContent>
                   </Card>
 
-                  <Card className="rounded-2xl shadow-none">
+                  <Card className="rounded-2xl border-border/70 bg-card shadow-sm">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base font-semibold">
                         Quality score
@@ -609,7 +609,7 @@ export default function Home() {
                         <div className="relative flex size-32 shrink-0 items-center justify-center rounded-full">
                           <svg
                             viewBox="0 0 120 120"
-                            className="absolute inset-0 size-full -rotate-90"
+                            className="absolute inset-0 size-full -rotate-90 text-primary"
                           >
                             <circle
                               cx="60"
@@ -624,7 +624,7 @@ export default function Home() {
                               cx="60"
                               cy="60"
                               r="47"
-                              stroke="#10b981"
+                              stroke="currentColor"
                               strokeWidth="10"
                               strokeLinecap="round"
                               strokeDasharray={`${2 * Math.PI * 47 * 0.948} ${2 * Math.PI * 47}`}
@@ -649,7 +649,7 @@ export default function Home() {
                               <span className="font-medium">96%</span>
                             </div>
                             <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                              <div className="h-full w-[96%] rounded-full bg-emerald-500" />
+                              <div className="h-full w-[96%] rounded-full bg-primary" />
                             </div>
                           </div>
                           <div>
@@ -660,7 +660,7 @@ export default function Home() {
                               <span className="font-medium">88%</span>
                             </div>
                             <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                              <div className="h-full w-[88%] rounded-full bg-blue-500" />
+                              <div className="h-full w-[88%] rounded-full bg-primary/65" />
                             </div>
                           </div>
                           <div>
@@ -671,7 +671,7 @@ export default function Home() {
                               <span className="font-medium">93%</span>
                             </div>
                             <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                              <div className="h-full w-[93%] rounded-full bg-violet-500" />
+                              <div className="h-full w-[93%] rounded-full bg-primary/40" />
                             </div>
                           </div>
                         </div>
@@ -686,7 +686,7 @@ export default function Home() {
                 </div>
 
                 <div className="grid gap-5 xl:grid-cols-[1.65fr_1fr]">
-                  <Card className="rounded-2xl shadow-none">
+                  <Card className="rounded-2xl border-border/70 bg-card shadow-sm">
                     <CardHeader className="flex flex-row items-start justify-between space-y-0">
                       <div>
                         <CardTitle className="text-base font-semibold">
@@ -811,7 +811,7 @@ export default function Home() {
                     </CardContent>
                   </Card>
 
-                  <Card className="rounded-2xl shadow-none">
+                  <Card className="rounded-2xl border-border/70 bg-card shadow-sm">
                     <CardHeader className="flex flex-row items-start justify-between space-y-0">
                       <div>
                         <CardTitle className="text-base font-semibold">
@@ -906,12 +906,12 @@ function MetricCard({
   description: string;
 }) {
   return (
-    <Card className="rounded-2xl shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+    <Card className="rounded-2xl border-border/70 bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
       <CardContent className="p-5">
         <div className="mb-5 flex items-center justify-between">
           <p className="text-sm text-muted-foreground">{title}</p>
-          <div className="flex size-9 items-center justify-center rounded-xl bg-muted">
-            <Icon className="size-[17px] text-muted-foreground" />
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Icon className="size-[17px] text-primary" />
           </div>
         </div>
         <p className="text-[30px] font-semibold tracking-tight">{value}</p>
