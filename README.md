@@ -4,6 +4,10 @@
 
 TestPilot is a full-stack QA portfolio project I built to bring common software testing workflows into one workspace. It combines test case management, test execution tracking, API testing, and defect management with a dashboard for monitoring testing activity.
 
+## Live Demo
+
+[Open TestPilot](https://test-pilot-amber.vercel.app)
+
 ## Screenshots
 
 ### Dashboard
@@ -64,7 +68,7 @@ TestPilot is a full-stack QA portfolio project I built to bring common software 
 | Framework | Next.js 16 |
 | Frontend | React 19, TypeScript |
 | Styling | Tailwind CSS 4, shadcn/ui |
-| Database | SQLite |
+| Database | Neon PostgreSQL |
 | ORM | Prisma 7 |
 | API | Next.js Route Handlers |
 | Testing | Playwright |
@@ -76,7 +80,7 @@ TestPilot uses a Next.js application with separate frontend workspaces and API r
 
 - **Frontend:** React components and Next.js pages provide the dashboard and testing modules.
 - **API layer:** Route handlers manage CRUD operations and API request execution.
-- **Database:** Prisma provides database access to the SQLite database.
+- **Database:** Prisma 7 provides database access to Neon PostgreSQL using the Prisma Neon adapter.
 - **Testing:** Playwright covers key interface workflows, API validation, and data integrity scenarios.
 
 ## Database Models
@@ -185,32 +189,32 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ```text
 TestPilot/
-├── app/
-│   ├── api/
-│   │   ├── api-requests/
-│   │   ├── api-testing/
-│   │   ├── defects/
-│   │   ├── test-cases/
-│   │   └── test-runs/
-│   ├── api-testing/
-│   ├── defects/
-│   ├── test-runs/
-│   ├── globals.css
-│   ├── layout.tsx
-│   └── page.tsx
-├── components/
-│   ├── ui/
-│   ├── api-testing-view.tsx
-│   ├── defects-view.tsx
-│   └── test-cases-view.tsx
-├── lib/
-├── prisma/
-├── public/
-│   └── screenshots/
-├── tests/
-├── .env.example
-├── package.json
-└── README.md
+â”œâ”€â”€ app/
+â”‚   â”œâ”€â”€ api/
+â”‚   â”‚   â”œâ”€â”€ api-requests/
+â”‚   â”‚   â”œâ”€â”€ api-testing/
+â”‚   â”‚   â”œâ”€â”€ defects/
+â”‚   â”‚   â”œâ”€â”€ test-cases/
+â”‚   â”‚   â””â”€â”€ test-runs/
+â”‚   â”œâ”€â”€ api-testing/
+â”‚   â”œâ”€â”€ defects/
+â”‚   â”œâ”€â”€ test-runs/
+â”‚   â”œâ”€â”€ globals.css
+â”‚   â”œâ”€â”€ layout.tsx
+â”‚   â””â”€â”€ page.tsx
+â”œâ”€â”€ components/
+â”‚   â”œâ”€â”€ ui/
+â”‚   â”œâ”€â”€ api-testing-view.tsx
+â”‚   â”œâ”€â”€ defects-view.tsx
+â”‚   â””â”€â”€ test-cases-view.tsx
+â”œâ”€â”€ lib/
+â”œâ”€â”€ prisma/
+â”œâ”€â”€ public/
+â”‚   â””â”€â”€ screenshots/
+â”œâ”€â”€ tests/
+â”œâ”€â”€ .env.example
+â”œâ”€â”€ package.json
+â””â”€â”€ README.md
 ```
 
 ## Development Status
@@ -219,11 +223,9 @@ The core TestPilot workflows are implemented, including test case management, te
 
 Potential future improvements include:
 
-- PostgreSQL support for production deployments.
-- More comprehensive database integration tests.
+- More comprehensive database integration and edge-case tests.
 - User authentication and workspace management.
 - CI integration and automated test reporting.
-- Deployment to a public hosting platform.
 
 ## Useful Resources
 
