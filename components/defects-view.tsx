@@ -234,7 +234,7 @@ export default function DefectsView() {
                 void fetchDefects();
               }}
               disabled={loading}
-              className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50"
+              className="flex items-center gap-2 rounded-lg border border-border/70 px-3 py-2 text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
             >
               <RefreshCw
                 size={16}
@@ -244,7 +244,7 @@ export default function DefectsView() {
             </button>
             <button
               onClick={startCreate}
-              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98]"
             >
               <Plus size={17} />
               Report Defect
@@ -289,7 +289,7 @@ export default function DefectsView() {
           />
         </section>
 
-        <section className="rounded-xl border bg-card">
+        <section className="rounded-xl border border-border/70 bg-card shadow-sm">
           <div className="flex flex-col justify-between gap-4 border-b p-5 lg:flex-row lg:items-center">
             <div>
               <h2 className="font-semibold">Reported Defects</h2>
@@ -309,7 +309,7 @@ export default function DefectsView() {
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search defects..."
                   aria-label="Search defects"
-                  className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 sm:w-56"
+                  className="w-full rounded-lg border border-border/70 bg-background py-2 pl-9 pr-3 text-sm outline-none transition-all focus:border-ring focus:ring-2 focus:ring-ring/20 sm:w-56"
                 />
               </div>
 
@@ -317,7 +317,7 @@ export default function DefectsView() {
                 value={severityFilter}
                 onChange={(e) => setSeverityFilter(e.target.value)}
                 aria-label="Filter by severity"
-                className="rounded-lg border bg-background px-3 py-2 text-sm"
+                className="rounded-lg border border-border/70 bg-background px-3 py-2 text-sm outline-none transition-all focus:border-ring focus:ring-2 focus:ring-ring/20"
               >
                 <option value="ALL">All Severities</option>
                 <option value="CRITICAL">Critical</option>
@@ -330,7 +330,7 @@ export default function DefectsView() {
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 aria-label="Filter by status"
-                className="rounded-lg border bg-background px-3 py-2 text-sm"
+                className="rounded-lg border border-border/70 bg-background px-3 py-2 text-sm outline-none transition-all focus:border-ring focus:ring-2 focus:ring-ring/20"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="OPEN">Open</option>
@@ -376,7 +376,7 @@ export default function DefectsView() {
                 </thead>
                 <tbody className="divide-y">
                   {filteredDefects.map((defect) => (
-                    <tr key={defect.id} className="hover:bg-muted/20">
+                    <tr key={defect.id} className="transition-colors hover:bg-muted/30">
                       <td className="min-w-64 px-5 py-4">
                         <p className="font-medium">{defect.title}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
@@ -407,7 +407,7 @@ export default function DefectsView() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => startEdit(defect)}
-                            className="rounded-md border px-3 py-1.5 text-xs hover:bg-muted"
+                            className="rounded-md border border-border/70 px-3 py-1.5 text-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           >
                             Edit
                           </button>
@@ -415,7 +415,7 @@ export default function DefectsView() {
                             onClick={() => deleteDefect(defect.id)}
                             aria-label="Delete defect"
                             title="Delete defect"
-                            className="flex size-8 items-center justify-center rounded-md border text-red-500 hover:bg-red-500/10"
+                            className="flex size-8 items-center justify-center rounded-md border border-border/70 text-red-500 transition-colors hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           >
                             <Trash2 size={15} />
                           </button>
@@ -431,7 +431,7 @@ export default function DefectsView() {
 
         {showForm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border bg-card shadow-xl">
+            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-border/70 bg-card shadow-sm shadow-xl">
               <div className="flex items-center justify-between border-b p-5">
                 <div>
                   <h2 className="text-lg font-semibold">
@@ -443,7 +443,7 @@ export default function DefectsView() {
                 </div>
                 <button
                   onClick={() => setShowForm(false)}
-                  className="rounded-lg p-2 hover:bg-muted"
+                  className="rounded-lg p-2 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label="Close form"
                 >
                   <X size={19} />
@@ -603,7 +603,7 @@ function StatCard({
   description: string;
 }) {
   return (
-    <div className="rounded-xl border bg-card p-5">
+    <div className="rounded-xl border border-border/70 bg-card shadow-sm p-5">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{label}</p>
         <span className="text-muted-foreground">{icon}</span>
