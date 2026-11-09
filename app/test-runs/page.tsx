@@ -239,7 +239,7 @@ export default function TestRunsPage() {
                 void loadRuns();
               }}
               disabled={loading}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border px-3 text-sm font-medium transition hover:bg-muted disabled:opacity-50"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border px-3 text-sm font-medium transition-all hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
             >
               <RefreshCw
                 className={`size-4 ${loading ? "animate-spin" : ""}`}
@@ -253,7 +253,7 @@ export default function TestRunsPage() {
                 setError("");
                 setSuccess("");
               }}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition-all hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <Plus className="size-4" />
               New test run
@@ -280,7 +280,7 @@ export default function TestRunsPage() {
         )}
 
         {showForm && (
-          <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+          <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md shadow-sm sm:p-6">
             <div className="mb-5">
               <h2 className="text-lg font-semibold">Create a test run</h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -379,7 +379,7 @@ export default function TestRunsPage() {
         )}
 
         <section className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-border bg-card p-5">
+          <div className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
             <p className="text-sm text-muted-foreground">Total executions</p>
             <p className="mt-3 text-3xl font-semibold tabular-nums">
               {runs.length}
@@ -389,7 +389,7 @@ export default function TestRunsPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-border bg-card p-5">
+          <div className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <CheckCircle2 className="size-4 text-emerald-500" />
               Tests passed
@@ -402,7 +402,7 @@ export default function TestRunsPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-border bg-card p-5">
+          <div className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <XCircle className="size-4 text-red-500" />
               Tests failed
@@ -504,7 +504,7 @@ export default function TestRunsPage() {
                     {filteredRuns.map((run) => (
                       <tr
                         key={run.id}
-                        className="transition hover:bg-muted/30"
+                        className="transition-colors duration-200 hover:bg-muted/40"
                       >
                         <td className="px-5 py-4">
                           <p className="font-medium">{run.name}</p>
