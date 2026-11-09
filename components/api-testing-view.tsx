@@ -264,7 +264,7 @@ async function deleteRequest(id: string) {
           </p>
         </div>
         
-        <section className="rounded-2xl border bg-card p-5">
+        <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h2 className="font-semibold">Saved requests</h2>
@@ -282,7 +282,7 @@ async function deleteRequest(id: string) {
               value={requestName}
               onChange={(event) => setRequestName(event.target.value)}
               placeholder="Name this request..."
-              className="h-10 min-w-0 flex-1 rounded-xl border bg-background px-3 text-sm outline-none focus:border-ring"
+              className="h-10 min-w-0 flex-1 rounded-xl border border-border/70 bg-background px-3 text-sm outline-none transition-all focus:border-ring focus:ring-2 focus:ring-ring/20"
             />
             <button
               onClick={saveRequest}
@@ -306,7 +306,7 @@ async function deleteRequest(id: string) {
               {savedRequests.map((request) => (
                 <div
                   key={request.id}
-                  className="flex flex-col justify-between gap-3 rounded-xl border p-3 sm:flex-row sm:items-center"
+                  className="flex flex-col justify-between gap-3 rounded-xl border border-border/70 bg-background/50 p-3 transition-all duration-200 hover:border-border hover:bg-muted/20 sm:flex-row sm:items-center"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">
@@ -324,14 +324,14 @@ async function deleteRequest(id: string) {
                   <div className="flex shrink-0 items-center gap-2">
                     <button
                       onClick={() => loadRequest(request)}
-                      className="rounded-lg border px-3 py-2 text-xs font-medium hover:bg-muted"
+                      className="rounded-lg border border-border/70 px-3 py-2 text-xs font-medium transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       Load
                     </button>
                     <button
                       onClick={() => deleteRequest(request.id)}
                       aria-label={`Delete ${request.name}`}
-                      className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      className="rounded-lg p-2 text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-destructive/10 hover:text-destructive"
                     >
                       <Trash2 className="size-4" />
                     </button>
@@ -342,14 +342,14 @@ async function deleteRequest(id: string) {
           )}
         </section>
 
-        <div className="overflow-hidden rounded-2xl border bg-card">
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
           <div className="flex flex-col gap-3 border-b p-4 sm:flex-row">
             <select
               value={method}
               onChange={(event) =>
                 setMethod(event.target.value as HttpMethod)
               }
-              className={`h-11 rounded-xl border bg-background px-3 text-sm font-bold outline-none ${methodStyles[method]}`}
+              className={`h-11 rounded-xl border border-border/70 bg-background px-3 text-sm font-bold outline-none ${methodStyles[method]}`}
               aria-label="HTTP method"
             >
               {methods.map((item) => (
@@ -368,14 +368,14 @@ async function deleteRequest(id: string) {
                 }
               }}
               placeholder="Enter request URL"
-              className="h-11 min-w-0 flex-1 rounded-xl border bg-background px-4 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+              className="h-11 min-w-0 flex-1 rounded-xl border border-border/70 bg-background px-4 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
               aria-label="Request URL"
             />
 
             <button
               onClick={executeRequest}
               disabled={loading || !url.trim()}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-medium text-primary-foreground transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -390,7 +390,7 @@ async function deleteRequest(id: string) {
             <div className="flex gap-5 px-5">
               <button
                 onClick={() => setActiveTab("headers")}
-                className={`border-b-2 py-3 text-sm font-medium transition-colors ${
+                className={`border-b-2 py-3 text-sm font-medium transition-all duration-200 ${
                   activeTab === "headers"
                     ? "border-primary text-foreground"
                     : "border-transparent text-muted-foreground"
@@ -400,7 +400,7 @@ async function deleteRequest(id: string) {
               </button>
               <button
                 onClick={() => setActiveTab("body")}
-                className={`border-b-2 py-3 text-sm font-medium transition-colors ${
+                className={`border-b-2 py-3 text-sm font-medium transition-all duration-200 ${
                   activeTab === "body"
                     ? "border-primary text-foreground"
                     : "border-transparent text-muted-foreground"
@@ -470,14 +470,14 @@ async function deleteRequest(id: string) {
                   onChange={(event) => setBody(event.target.value)}
                   placeholder={'{\n  "title": "Test request",\n  "body": "Hello API"\n}'}
                   spellCheck={false}
-                  className="min-h-52 w-full resize-y rounded-xl border bg-background p-4 font-mono text-sm outline-none focus:border-ring"
+                  className="min-h-52 w-full resize-y rounded-xl border border-border/70 bg-background p-4 font-mono text-sm outline-none focus:border-ring"
                 />
               </div>
             )}
           </div>
         </div>
 
-        <section className="overflow-hidden rounded-2xl border bg-card">
+        <section className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
           <div className="flex flex-col justify-between gap-3 border-b p-5 sm:flex-row sm:items-center">
             <div>
               <h2 className="font-semibold">Response</h2>
