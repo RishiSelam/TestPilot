@@ -260,7 +260,7 @@ export default function TestCasesView() {
 
   const inputClass =
     "mt-1.5 w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring/30";
-  const labelClass = "text-sm font-medium";
+  const labelClass = "text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
   return (
     <section className="space-y-6">
@@ -316,7 +316,7 @@ export default function TestCasesView() {
         />
       </div>
 
-      <div className="rounded-2xl border bg-card">
+      <div className="rounded-2xl border border-border/70 bg-card shadow-sm">
         <div className="flex flex-col gap-3 border-b p-4 lg:flex-row">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -402,7 +402,7 @@ export default function TestCasesView() {
             {filteredCases.map((item) => (
               <article
                 key={item.id}
-                className="flex flex-col gap-4 p-4 transition-colors hover:bg-muted/20 sm:flex-row sm:items-start sm:justify-between sm:p-5"
+                className="flex flex-col gap-4 p-4 transition-all duration-200 hover:border-border/60 hover:bg-muted/30 sm:flex-row sm:items-start sm:justify-between sm:p-5"
               >
                 <div className="min-w-0 flex-1">
                   <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -637,7 +637,7 @@ export default function TestCasesView() {
 
 function SummaryCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border bg-card p-4">
+    <div className="rounded-2xl border border-border/70 bg-card shadow-sm p-4">
       <p className="text-sm text-muted-foreground">{label}</p>
       <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
     </div>
